@@ -4,7 +4,8 @@ import (
 	"context"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/resource"
+	"github.com/clarify/clarify-go/fields"
+	"github.com/clarify/clarify-go/views"
 )
 
 func main() {
@@ -16,20 +17,20 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	inputs := map[string]clarify.SignalSave{
+	inputs := map[string]views.SignalSave{
 		"a": {
-			SignalAttributes: clarify.SignalAttributes{
+			SignalSaveAttributes: views.SignalSaveAttributes{
 				Name: "Signal A",
-				Labels: resource.Labels{
+				Labels: fields.Labels{
 					"data-source": {"<your data-source name>"},
 					"location":    {"<your location name>"},
 				},
 			},
 		},
 		"b": {
-			SignalAttributes: clarify.SignalAttributes{
+			SignalSaveAttributes: views.SignalSaveAttributes{
 				Name: "Signal B",
-				Labels: resource.Labels{
+				Labels: fields.Labels{
 					"data-source": {"<your data-source name>"},
 					"location":    {"<your location name>"},
 				},

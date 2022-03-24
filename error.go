@@ -15,9 +15,9 @@
 package clarify
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
+
+	"github.com/clarify/clarify-go/jsonrpc"
 )
 
 const (
@@ -37,6 +37,10 @@ const (
 	CodeTryAgain               = -32015
 	CodePartialFailure         = -32021
 )
+
+type ServerError = jsonrpc.ServerError
+
+type HTTPError = jsonrpc.HTTPError
 
 // Client errors.
 const (
@@ -90,43 +94,4 @@ func (errs joinError) Is(other error) bool {
 
 func (errs joinError) Unwrap() error {
 	return errs.next
-}
-
-// HTTPError described a transport-layer error that is returned when the RPC
-// server can not be reached for some reason.
-type HTTPError struct {
-	StatusCode int
-	Body       string
-	Headers    http.Header
-}
-
-func (err HTTPError) Error() string {
-	return fmt.Sprintf("%s (status: %d, headers: %+v)", err.Body, err.StatusCode, err.Headers)
-}
-
-// ServerError describes the error format returned by the RPC server.
-type ServerError struct {
-	Code    int       `json:"code"`
-	Message string    `json:"message"`
-	Data    ErrorData `json:"data"`
-}
-
-func (err ServerError) Error() string {
-	return fmt.Sprintf("%s (code: %d, data: %+v)", err.Message, err.Code, err.Data)
-}
-
-// ErrorData describes possible error data fields for the Clarify RPC server.
-type ErrorData struct {
-	Trace            string              `json:"trace"`
-	Params           map[string][]string `json:"params,omitempty"`
-	InvalidResources []InvalidResource   `json:"invalidResources,omitempty"`
-	PartialResult    json.RawMessage     `json:"partialResult,omitempty"`
-}
-
-// InvalidResource describes an invalid resource.
-type InvalidResource struct {
-	ID            string              `json:"id,omitempty"`
-	Type          string              `json:"type"`
-	Message       string              `json:"message"`
-	InvalidFields map[string][]string `json:"invalidFields,omitempty"`
 }

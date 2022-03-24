@@ -12,48 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resource
+package fields
 
 import (
-	"encoding"
-	"encoding/base64"
 	"encoding/json"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
-// Binary wraps a slice of bytes in order for it to be represented as a base64
-// string in text-based encoding formats.
-type Binary []byte
+// EnumValues maps integer Items values to strings.
+type EnumValues map[int]string
 
-var _ encoding.TextMarshaler = Binary(nil)
-var _ encoding.TextUnmarshaler = (*Binary)(nil)
+var _ json.Marshaler = EnumValues{}
 
-func (b Binary) String() string {
-	return base64.StdEncoding.EncodeToString(b)
+// Clone returns a deep clone of the enums structure.
+func (e EnumValues) Clone() EnumValues {
+	return maps.Clone(e)
 }
 
-func (b Binary) MarshalText() ([]byte, error) {
-	enc := base64.StdEncoding
-	buf := make([]byte, enc.EncodedLen(len(b)))
-	enc.Encode(buf, b)
-	return buf, nil
-}
-
-func (b *Binary) UnmarshalText(data []byte) error {
-	enc := base64.StdEncoding
-	buf := make([]byte, enc.DecodedLen(len(data)))
-	n, err := enc.Decode(buf, data)
-	if err != nil {
-		return err
+func (e EnumValues) MarshalJSON() ([]byte, error) {
+	if len(e) == 0 {
+		return []byte(`{}`), nil
 	}
-
-	*b = make(Binary, n)
-	copy(*b, buf[:n])
-	return nil
+	return json.Marshal(map[int]string(e))
 }
 
 type Labels map[string][]string
+
+var _ json.Marshaler = Labels{}
+
+// Clone returns a deep clone of the labels structure.
+func (l Labels) Clone() Labels {
+	if l == nil {
+		return nil
+	}
+	n := make(Labels, len(l))
+	for k, v := range l {
+		n[k] = slices.Clone(v)
+	}
+	return n
+}
 
 func (l Labels) MarshalJSON() ([]byte, error) {
 	if len(l) == 0 {
@@ -119,14 +118,4 @@ func (l *Labels) Remove(key string, value string) {
 		return
 	}
 	(*l)[key] = ll
-}
-
-// EnumValues maps integer Items values to strings.
-type EnumValues map[int]string
-
-func (e EnumValues) MarshalJSON() ([]byte, error) {
-	if len(e) == 0 {
-		return []byte(`{}`), nil
-	}
-	return json.Marshal(map[int]string(e))
 }

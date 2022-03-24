@@ -20,24 +20,6 @@ import (
 	"net/http"
 )
 
-const (
-	// Standard JSON RPC error codes.
-	CodeInvalidJSON    = -32700
-	CodeInvalidRequest = -32600
-	CodeMethodNotFound = -32601
-	CodeInvalidParams  = -32602
-	CodeInternal       = -32603
-	CodeServerError    = -32000
-
-	// Clarify error codes.
-	CodeProduceInvalidResource = -32001
-	CodeFoundInvalidResource   = -32002
-	CodeForbidden              = -32003
-	CodeConflict               = -32009
-	CodeTryAgain               = -32015
-	CodePartialFailure         = -32021
-)
-
 // Client errors.
 const (
 	ErrBadRequest  strErr = "bad request"
@@ -96,14 +78,14 @@ func (err HTTPError) Error() string {
 	return fmt.Sprintf("%s (status: %d, headers: %+v)", err.Body, err.StatusCode, err.Headers)
 }
 
-// Error describes the error format returned by the RPC server.
-type Error struct {
+// ServerError describes the error format returned by the RPC server.
+type ServerError struct {
 	Code    int       `json:"code"`
 	Message string    `json:"message"`
 	Data    ErrorData `json:"data"`
 }
 
-func (err Error) Error() string {
+func (err ServerError) Error() string {
 	return fmt.Sprintf("%s (code: %d, data: %+v)", err.Message, err.Code, err.Data)
 }
 

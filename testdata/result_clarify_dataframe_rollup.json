@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "total": 2,
+    "groupIncludedByType": true
+  },
+  "data": {
+    "times": [
+      "2022-01-01T00:00:00Z",
+      "2022-01-01T01:00:00Z",
+      "2022-01-01T02:00:00Z"
+    ],
+    "series": {
+      "c8l95d2sahsh22imiabg_sum": [64, 32.1, 32.5],
+      "c8l95d2sahsh22imiabg_avg": [32, 32.1, 32.5],
+      "c8l95d2sahsh22imiabg_min": [30, 32.1, 32.5],
+      "c8l95d2sahsh22imiabg_max": [34, 32.1, 32.5],
+      "c8l95d2sahsh22imiabg_count": [2, 1, 1]
+    }
+  },
+  "included": {
+    "items": [
+      {
+        "id": "c8l95d2sahsh22imiabg",
+        "type": "items",
+        "meta": {
+          "annotations": {
+            "clarify/clarify-go/from/signal/attributes-hash": "220596a7b7b4ea2ac5abb6a13e6198f161443226",
+            "clarify/clarify-go/from/signal/id": "c8keagasahsp3cpvma20"
+          },
+          "attributesHash": "220596a7b7b4ea2ac5abb6a13e6198f161443226",
+          "createdAt": "2022-01-01T00:00:00Z",
+          "updatedAt": "2022-01-01T00:00:00Z"
+        },
+        "attributes": {
+          "name": "Temperature",
+          "description": "Inside temperature",
+          "valueType": "numeric",
+          "sourceType": "measurement",
+          "engUnit": "°C",
+          "sampleInterval": null,
+          "gapDetection": "PT1H",
+          "enumValues": {},
+          "labels": {
+            "location": ["Living room", "inside"],
+            "data-source": ["My Smart Thermostat"]
+          },
+          "visible": true
+        },
+        "relationships": {}
+      }
+    ]
+  }
+}
