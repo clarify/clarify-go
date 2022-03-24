@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"io"
 	"time"
+
+	"github.com/clarify/clarify-go/fields"
 )
 
 // Normalizer describes a type that should be normalized before encoding.
@@ -27,20 +29,20 @@ type Normalizer interface {
 	Normalize()
 }
 
-// SelectEntry describes the generic selection view of a resource entry.
-type SelectEntry[A, R any] struct {
+// Resource describes a generic resource entry select view.
+type Resource[A, R any] struct {
 	Identifier
-	Meta          MetaSelect `json:"meta"`
-	Attributes    A          `json:"attributes"`
-	Relationships R          `json:"relationships"`
+	Meta          ResourceMeta `json:"meta"`
+	Attributes    A            `json:"attributes"`
+	Relationships R            `json:"relationships"`
 }
 
-var _ json.Marshaler = SelectEntry[struct{}, struct{}]{}
+var _ json.Marshaler = Resource[struct{}, struct{}]{}
 
-func (e SelectEntry[A, R]) MarshalJSON() ([]byte, error) {
+func (e Resource[A, R]) MarshalJSON() ([]byte, error) {
 	var target = struct {
 		Identifier
-		Meta          MetaSelect      `json:"meta"`
+		Meta          ResourceMeta    `json:"meta"`
 		Attributes    json.RawMessage `json:"attributes"`
 		Relationships R               `json:"relationships"`
 	}{
@@ -59,14 +61,14 @@ func (e SelectEntry[A, R]) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	target.Attributes = buf.Bytes()
-	target.Meta.AttributesHash = Binary(hash.Sum(nil))
+	target.Meta.AttributesHash = fields.Binary(hash.Sum(nil))
 	return json.Marshal(target)
 }
 
 // ToOne describes a to one relationship entry.
 type ToOne struct {
 	Meta map[string]json.RawMessage `json:"meta,omitempty"`
-	Data *Identifier                `json:"data"`
+	Data NullIdentifier             `json:"data"`
 }
 
 // ToMany describes a to many relationship entry.
@@ -75,22 +77,46 @@ type ToMany struct {
 	Data []Identifier               `json:"data"`
 }
 
-// Identifier identifies a resource.
+// Identifier uniquely identifies a resource entry.
 type Identifier struct {
 	Type string `json:"type"`
 	ID   string `json:"id"`
 }
 
-// MetaSelect holds the standardized meta data fields for a resource entry's
-// selection view.
-type MetaSelect struct {
+// NullIdentifier is a version of Identifier where the zero-value is encode as
+// null in JSON.
+type NullIdentifier Identifier
+
+var (
+	_ json.Marshaler   = NullIdentifier{}
+	_ json.Unmarshaler = (*NullIdentifier)(nil)
+)
+
+func (id NullIdentifier) MarshalJSON() ([]byte, error) {
+	if id.ID == "" && id.Type == "" {
+		return []byte(`null`), nil
+	}
+	return json.Marshal(Identifier(id))
+}
+
+func (id *NullIdentifier) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	if bytes.Equal(data, []byte(`null`)) {
+		*id = NullIdentifier{}
+		return nil
+	}
+	return json.Unmarshal(data, (*Identifier)(id))
+}
+
+// ResourceMeta holds the meta data fields for a resource entry select view.
+type ResourceMeta struct {
 	Annotations    map[string]string `json:"annotations,omitempty"`
-	AttributesHash Binary            `json:"attributesHash,omitempty"`
+	AttributesHash fields.Binary     `json:"attributesHash,omitempty"`
 	CreatedAt      time.Time         `json:"createdAt"`
 	UpdatedAt      time.Time         `json:"updatedAt"`
 }
 
-// MetaSave holds the mutable meta data fields for a resource entry.
-type MetaSave struct {
+// ResourceMetaSave holds the mutable meta data fields for a resource entry.
+type ResourceMetaSave struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }

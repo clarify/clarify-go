@@ -15,6 +15,7 @@
 package clarify_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -41,7 +42,11 @@ func (m mockRPCHandler) Do(ctx context.Context, req jsonrpc.Request, result any)
 	if resp.err != nil {
 		return resp.err
 	}
-	if err := json.Unmarshal(resp.rawResult, result); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(resp.rawResult))
+	// DisallowUnknownFields is useful for discovering issues in testdata or
+	// models; production clients should not use it.
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(result); err != nil {
 		return fmt.Errorf("%w: %v", jsonrpc.ErrBadResponse, err)
 	}
 	return nil

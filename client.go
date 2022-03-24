@@ -17,12 +17,12 @@ package clarify
 import (
 	"github.com/clarify/clarify-go/data"
 	"github.com/clarify/clarify-go/jsonrpc"
+	"github.com/clarify/clarify-go/resource"
 )
 
 const (
-	// integration namespace methods.
-	methodInsert      = "integration.insert"
-	methodSaveSignals = "integration.saveSignals"
+	paramIntegration jsonrpc.ParamName = "integration"
+	paramData        jsonrpc.ParamName = "data"
 )
 
 // Client allows calling JSON RPC methods against Clarify.
@@ -41,30 +41,105 @@ func NewClient(integration string, h jsonrpc.Handler) *Client {
 // Insert returns a new insert request that can be executed at will. Requires
 // access to the integration namespace. Will insert the data to the integration
 // set in c.
-func (c *Client) Insert(data data.Frame) InsertRequest {
-	return InsertRequest{
-		integration: c.integration,
-		data:        data,
-		h:           c.h,
-	}
+func (c *Client) Insert(data data.Frame) resource.Request[InsertResult] {
+	return methodInsert.NewRequest(c.h, paramData.Value(data))
+}
+
+// InsertResult holds the result of an Insert operation.
+type InsertResult struct {
+	SignalsByInput map[string]resource.CreateSummary `json:"signalsByInput"`
+}
+
+var methodInsert = resource.Method[InsertResult]{
+	APIVersion: "1.0",
+	Method:     "integration.insert",
 }
 
 // SaveSignals returns a new save signals request that can be modifed though a
 // chainable API before it's executed. Keys in inputs are scoped to the current
 // integration. Requires access to the integration namespace.
-func (c *Client) SaveSignals(inputs map[string]SignalSave) SaveSignalsRequest {
-	return SaveSignalsRequest{
-		method:     methodSaveSignals,
-		entryParam: "inputs",
-		contextParams: map[string]any{
-			"integration": c.integration,
-		},
-		entries: inputs,
-		h:       c.h,
+func (c *Client) SaveSignals(inputs map[string]SignalSave) resource.SaveRequest[map[string]SignalSave, SaveSignalsResult] {
+	return methodSaveSignals.NewRequest(c.h, inputs, paramIntegration.Value(c.integration))
+}
+
+// SaveSignalsResults holds the result of a SaveSignals operation.
+type SaveSignalsResult struct {
+	SignalsByInput map[string]resource.SaveSummary `json:"signalsByInput"`
+}
+
+var methodSaveSignals = resource.SaveMethod[map[string]SignalSave, SaveSignalsResult]{
+	APIVersion: "1.0",
+	Method:     "integration.saveSignals",
+	DataParam:  "inputs",
+}
+
+// PublishSignals returns a new request for publishing signals as Items.
+// Requires access to the admin namespace.
+//
+// Disclaimer: this method is based on a pre-release of the Clarify API, and
+// might be unstable or stop working.
+func (c *Client) PublishSignals(integration string, itemsBySignal map[string]ItemSave) resource.SaveRequest[map[string]ItemSave, PublishSignalsResult] {
+	return methodPublishSignals.NewRequest(c.h, itemsBySignal, paramIntegration.Value(c.integration))
+}
+
+// PublishSignalsResult holds the result of a PublishSignals operation.
+type PublishSignalsResult struct {
+	ItemsBySignals map[string]resource.SaveSummary `json:"itemsBySignals"`
+}
+
+var methodPublishSignals = resource.SaveMethod[map[string]ItemSave, PublishSignalsResult]{
+	APIVersion: "1.1beta2",
+	Method:     "admin.publishSignals",
+	DataParam:  "itemsBySignal",
+}
+
+// SelectSignals returns a new request for queying signals and related
+// resources.
+//
+// Disclaimer: this method is based on a pre-release of the Clarify API, and
+// might be unstable or stop working.
+func (c *Client) SelectSignals(integration string) resource.SelectRequest[SelectSignalsResult] {
+	return methodSelectSignals.NewRequest(c.h, paramIntegration.Value(integration))
+}
+
+// SelectSignalsResult holds the result of a SelectSignals operation.
+type SelectSignalsResult = resource.Selection[Signal, SignalInclude]
+
+var methodSelectSignals = resource.SelectMethod[SelectSignalsResult]{
+	APIVersion: "1.1beta2",
+	Method:     "admin.selectSignals",
+}
+
+// SelectItems returns a new request for queying signals and related
+// resources.
+//
+// Disclaimer: this method is based on a pre-release of the Clarify API, and
+// might be unstable or stop working.
+func (c *Client) SelectItems() resource.SelectRequest[SelectItemsResult] {
+	return methodSelectItems.NewRequest(c.h)
+}
+
+// SelectItemsResult holds the result of a SelectItems operation.
+type SelectItemsResult = resource.Selection[Item, ItemInclude]
+
+var methodSelectItems = resource.SelectMethod[SelectItemsResult]{
+	APIVersion: "1.1beta2",
+	Method:     "admin.selectItems",
+}
+
+// DataFrame returns a new request from retrieving data from clarify. The
+// request can be furthered modified by a chainable API before it's executed. By
+// default, the data section is set to be included in the response.
+//
+// Disclaimer: this method is based on a pre-release of the Clarify API, and
+// might be unstable or stop working.
+func (c *Client) DataFrame() DataFrameRequest {
+	return DataFrameRequest{
+		parent: methodDataFrame.NewRequest(c.h),
 	}
 }
 
-type SaveSignalsRequest = KeyedSaveRequest[SignalSave, SaveSignalsResult]
-type SaveSignalsResult struct {
-	SignalsByInput map[string]SaveSummary `json:"signalsByInput"`
+var methodDataFrame = resource.SelectMethod[DataFrameResult]{
+	APIVersion: "1.1beta2",
+	Method:     "clarify.dataFrame",
 }

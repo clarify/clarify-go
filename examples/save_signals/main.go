@@ -4,7 +4,7 @@ import (
 	"context"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/resource"
+	"github.com/clarify/clarify-go/fields"
 )
 
 func main() {
@@ -18,18 +18,18 @@ func main() {
 
 	inputs := map[string]clarify.SignalSave{
 		"a": {
-			SignalAttributes: clarify.SignalAttributes{
+			SignalWriteAttributes: clarify.SignalWriteAttributes{
 				Name: "Signal A",
-				Labels: resource.Labels{
+				Labels: fields.Labels{
 					"data-source": {"<your data-source name>"},
 					"location":    {"<your location name>"},
 				},
 			},
 		},
 		"b": {
-			SignalAttributes: clarify.SignalAttributes{
+			SignalWriteAttributes: clarify.SignalWriteAttributes{
 				Name: "Signal B",
-				Labels: resource.Labels{
+				Labels: fields.Labels{
 					"data-source": {"<your data-source name>"},
 					"location":    {"<your location name>"},
 				},

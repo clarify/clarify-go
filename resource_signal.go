@@ -16,69 +16,78 @@ package clarify
 
 import (
 	"github.com/clarify/clarify-go/data"
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/resource"
 )
 
-// SignalSave describe the writable attributes.
-type SignalSave struct {
-	SignalAttributes
-	resource.MetaSave
+// Signal describe the select view for a signal.
+type Signal = resource.Resource[SignalAttributes, SignalRelationships]
+
+type SignalInclude struct {
+	Items []Item `json:"items"`
 }
 
-// SignalAttributes contains writable signal attributes.
+// SignalSave describe the save view for a signal.
+type SignalSave struct {
+	SignalWriteAttributes
+	resource.ResourceMetaSave
+}
+
+// SignalAttributes contains the attributes for the signal select view.
 type SignalAttributes struct {
+	SignalWriteAttributes
+	SignalReadOnlyAttributes
+}
+
+// SignalReadOnlyAttributes contains read-only signal attributes.
+type SignalReadOnlyAttributes struct {
+	Input string `json:"input"`
+}
+
+// SignalWriteAttributes contains writable signal attributes.
+type SignalWriteAttributes struct {
 	Name           string             `json:"name"`
 	Description    string             `json:"description"`
-	Type           ValueType          `json:"type"`
+	ValueType      ValueType          `json:"valueType"`
 	SourceType     SourceType         `json:"sourceType"`
 	EngUnit        string             `json:"engUnit"`
 	SampleInterval data.FixedDuration `json:"sampleInterval"`
 	GapDetection   data.FixedDuration `json:"gapDetection"`
-	Labels         resource.Labels    `json:"labels"`
-	EnumValues     map[int]string     `json:"enumValues"`
+	Labels         fields.Labels      `json:"labels"`
+	EnumValues     fields.EnumValues  `json:"enumValues"`
 }
 
+// SignalRelationships declare the available relationships for the signal model.
 type SignalRelationships struct {
 	Integration resource.ToOne `json:"integration"`
 	Item        resource.ToOne `json:"item"`
 }
 
-func (attr *SignalAttributes) Normalize() {
-	if attr.Labels == nil {
-		attr.Labels = resource.Labels{}
-	}
-	if attr.EnumValues == nil {
-		attr.EnumValues = map[int]string{}
-	}
-}
-
-// ValueType determine how Items data values should be interpreted.
+// ValueType determine how data values should be interpreted.
 type ValueType string
 
-// Allowed timeseires types.
+// Allowed signal/items types.
 const (
-	// Numeric indicates that Items values should be treated as numeric
-	// (floating point) values.
+	// Numeric indicates that values should be treated as decimal numbers.
 	Numeric ValueType = "numeric"
 
-	// Enum indicates that Items values should be treated as integer
-	// indices to the Items EnumValues map.
+	// Enum indicates that values should be treated as integer indices to a map
+	// of enumerated values.
 	Enum ValueType = "enum"
 )
 
-// SourceType describe the the source of a Items instance.
+// SourceType describe how data values where produced.
 type SourceType string
 
-// Allowed Items source types.
+// Allowed signal/item source types.
 const (
-	// Measurement indicates that Items values are retrieved "directly"
-	// from a sensor.
+	// Measurement indicates that values are retrieved "directly" from a sensor.
 	Measurement SourceType = "measurement"
 
-	// Aggregation indicates that Items values are aggregated from one or
-	// more sources.
+	// Aggregation indicates that values are aggregated from one or more
+	// sources.
 	Aggregation SourceType = "aggregation"
 
-	// Prediction indicates that Items values are predictions or forecasts.
+	// Prediction indicates that values are predictions or forecasts.
 	Prediction SourceType = "prediction"
 )

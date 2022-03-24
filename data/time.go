@@ -87,16 +87,18 @@ func (ts *Timestamp) UnmarshalText(data []byte) error {
 }
 
 // FixedDuration holds microseconds and encode them as a RFC 3339 compatible
-// fixed duration string. The zero-value is encoded as JSON null.
+// fixed duration string. The zero-value is encoded as null in JSON.
 type FixedDuration int64
 
 var (
-	_ json.Marshaler   = FixedDuration(0)
+	_ interface {
+		json.Marshaler
+		fmt.Stringer
+	} = FixedDuration(0)
 	_ json.Unmarshaler = (*FixedDuration)(nil)
 )
 
 const (
-	null                  = `null`
 	patternWeekToFraction = `^(?P<sign>-)?P((?P<weeks>\d+)W)?((?P<days>\d+)D)?(T((?P<hours>\d+)H)?((?P<minutes>\d+)M)?((?P<fractions>\d+(\.\d+)?)S)?)?$`
 )
 
@@ -159,7 +161,7 @@ func (d FixedDuration) String() string {
 // MarshalJSON implements json.Marshaler.
 func (d FixedDuration) MarshalJSON() ([]byte, error) {
 	if d == 0 {
-		return []byte(null), nil
+		return []byte(`null`), nil
 	}
 	return json.Marshal(formatFixedDuration(d))
 }

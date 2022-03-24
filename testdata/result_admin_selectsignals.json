@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "total": 2,
+    "groupIncludedByType": true
+  },
+  "data": [
+    {
+      "id": "c8keagasahsp3cpvma20",
+      "type": "signals",
+      "meta": {
+        "annotations": {},
+        "attributesHash": "220596a7b7b4ea2ac5abb6a13e6198f161443226",
+        "createdAt": "2022-01-01T00:00:00Z",
+        "updatedAt": "2022-01-01T00:00:00Z"
+      },
+      "attributes": {
+        "name": "Temperature",
+        "description": "Inside temperature",
+        "valueType": "numeric",
+        "sourceType": "measurement",
+        "engUnit": "°C",
+        "sampleInterval": null,
+        "gapDetection": "PT1H",
+        "enumValues": {},
+        "labels": {
+          "location": ["Living room", "inside"],
+          "data-source": ["My Smart Thermostat"]
+        },
+        "input": "temp"
+      },
+      "relationships": {
+        "integration": {
+          "data": {
+            "type": "integrations",
+            "id": "c8ktonqsahsmemfs7lv0"
+          }
+        },
+        "item": {
+          "data": {
+            "type": "items",
+            "id": "c8l95d2sahsh22imiabg"
+          }
+        }
+      }
+    }
+  ],
+  "included": {
+    "items": [
+      {
+        "id": "c8l95d2sahsh22imiabg",
+        "type": "items",
+        "meta": {
+          "annotations": {
+            "clarify/clarify-go/from/signal/attributes-hash": "220596a7b7b4ea2ac5abb6a13e6198f161443226",
+            "clarify/clarify-go/from/signal/id": "c8keagasahsp3cpvma20"
+          },
+          "attributesHash": "220596a7b7b4ea2ac5abb6a13e6198f161443226",
+          "createdAt": "2022-01-01T00:00:00Z",
+          "updatedAt": "2022-01-01T00:00:00Z"
+        },
+        "attributes": {
+          "name": "Temperature",
+          "description": "Inside temperature",
+          "valueType": "numeric",
+          "sourceType": "measurement",
+          "engUnit": "°C",
+          "sampleInterval": null,
+          "gapDetection": "PT1H",
+          "enumValues": {},
+          "labels": {
+            "location": ["Living room", "inside"],
+            "data-source": ["My Smart Thermostat"]
+          },
+          "visible": true
+        },
+        "relationships": {}
+      }
+    ]
+  }
+}

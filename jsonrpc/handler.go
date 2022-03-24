@@ -92,28 +92,6 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 	return nil
 }
 
-// Request describe the structure of an RPC Request. The request should be
-// initialized via NewRequest.
-type Request struct {
-	JSONRPC string `json:"jsonrpc"`
-	Method  string `json:"method"`
-	ID      int    `json:"id"`
-	Params  any    `json:"params"`
-
-	// Transport layer parameters.
-	APIVersion string `json:"-"`
-}
-
-func NewRequest(method string, params any) Request {
-	return Request{
-		JSONRPC:    "2.0",
-		Method:     method,
-		ID:         1,
-		Params:     params,
-		APIVersion: defaultAPIVersion,
-	}
-}
-
 type rpcResponse struct {
 	JSONRPC string `json:"jsonrpc"`
 	Error   *Error `json:"error"`
