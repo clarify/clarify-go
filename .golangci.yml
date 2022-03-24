@@ -1,13 +1,13 @@
 linters:
   enable:
-    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers
-    - bodyclose # checks whether HTTP response body is closed successfully
-    - gci # Gci control golang package import order and make it always deterministic.
-    - godot # Check if comments end in a period
-    - misspell # Finds commonly misspelled English words in comments
-    - rowserrcheck # checks whether Err of rows is checked successfully
+    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers.
+    - bodyclose # Checks whether HTTP response body is closed successfully.
+    - gci # Control golang package import order and make it always deterministic.
+    - godot # Check if comments end in a period.
+    - misspell # Finds commonly misspelled English words in comments.
+    - rowserrcheck # Checks whether Err of rows is checked successfully.
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
-    - goheader # Checks is file header matches to pattern
+    - goheader # Checks is file header matches pattern.
 
 linters-settings:
   goheader:

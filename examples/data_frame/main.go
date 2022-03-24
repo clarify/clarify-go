@@ -7,8 +7,7 @@ import (
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/fields"
-	"github.com/clarify/clarify-go/views"
+	"github.com/clarify/clarify-go/query"
 )
 
 func main() {
@@ -20,14 +19,12 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	t1 := fields.AsTimestamp(time.Now())
-	t2 := t1.Add(time.Hour)
-	df := views.DataFrame{
-		"a": {t1: 1.0, t2: 1.2},
-		"b": {t1: 2.0},
-	}
+	t1 := time.Now().Add(-24 * time.Hour)
+	t2 := time.Now()
 
-	result, err := client.Insert(df).Do(ctx)
+	result, err := client.DataFrame().Limit(5).TimeRange(t1, t2).RollupBucket(15 * time.Minute).Last(3).Filter(
+		query.Field("annotations.clarify/clarify-go/example/name", query.Equal("publish_signals")),
+	).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

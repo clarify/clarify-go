@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package data
+package fields
 
 import (
+	"bytes"
 	"encoding/json"
 	"math"
 )
@@ -38,13 +39,14 @@ func (f Number) Float64() float64 {
 
 func (f Number) MarshalJSON() ([]byte, error) {
 	if math.IsNaN(float64(f)) {
-		return []byte(null), nil
+		return []byte(`null`), nil
 	}
 	return json.Marshal(float64(f))
 }
 
 func (f *Number) UnmarshalJSON(data []byte) error {
-	if string(data) == null {
+	data = bytes.TrimSpace(data)
+	if bytes.Equal(data, []byte(`null`)) {
 		*f = Number(math.NaN())
 		return nil
 	}

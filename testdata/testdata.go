@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package data
+package testdata
 
-// Parsing errors.
-const (
-	ErrBadFixedDuration strErr = "must be RFC 3339 duration in range week to fraction"
+import (
+	_ "embed"
 )
 
-type strErr string
+//go:embed result_admin_selectsignals.json
+var ResultSelectSignals []byte
 
-func (err strErr) Error() string { return string(err) }
+//go:embed result_clarify_dataframe_rollup.json
+var ResultDataFrameRollup []byte

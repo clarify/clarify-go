@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package clarify allows interacting with https://api.clarify.io/v1/, and
-// perform simple manipulations of Clarify data and meta-data.
-package clarify
+package fields
+
+// Parsing errors.
+const (
+	ErrBadFixedDuration strErr = "must be RFC 3339 duration in range week to fraction"
+)
+
+type strErr string
+
+func (err strErr) Error() string { return string(err) }
