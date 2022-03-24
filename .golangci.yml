@@ -4,7 +4,6 @@ linters:
     - bodyclose # checks whether HTTP response body is closed successfully
     - gci # Gci control golang package import order and make it always deterministic.
     - godot # Check if comments end in a period
-    - golint # Golint differs from gofmt. Gofmt reformats Go source code, whereas golint prints out style mistakes
     - misspell # Finds commonly misspelled English words in comments
     - rowserrcheck # checks whether Err of rows is checked successfully
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.

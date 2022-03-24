@@ -1,0 +1,110 @@
+package jsonrpc
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+const (
+	// Standard JSON RPC error codes.
+	CodeInvalidJSON    = -32700
+	CodeInvalidRequest = -32600
+	CodeMethodNotFound = -32601
+	CodeInvalidParams  = -32602
+	CodeInternal       = -32603
+	CodeServerError    = -32000
+
+	// Clarify error codes.
+	CodeProduceInvalidResource = -32001
+	CodeFoundInvalidResource   = -32002
+	CodeForbidden              = -32003
+	CodeConflict               = -32009
+	CodeTryAgain               = -32015
+	CodePartialFailure         = -32021
+)
+
+// Client errors.
+const (
+	ErrBadRequest  strErr = "bad request"
+	ErrBadResponse strErr = "bad response"
+)
+
+type strErr string
+
+func (err strErr) Error() string { return string(err) }
+
+type joinError struct {
+	err, next error
+	sep       string
+}
+
+func joinErrors(err, next error, sep string) error {
+	switch {
+	case err == nil:
+		return next
+	case next == nil:
+		return err
+	default:
+		return joinError{
+			err:  err,
+			next: next,
+			sep:  sep,
+		}
+	}
+}
+
+func appendOnError(target *error, f func() error, sep string) {
+	*target = joinErrors(*target, f(), sep)
+}
+
+func (errs joinError) Error() string {
+	return fmt.Sprintf("%s%s%s", errs.err, errs.sep, errs.next)
+}
+
+func (errs joinError) Is(other error) bool {
+	return other == errs.err
+}
+
+func (errs joinError) Unwrap() error {
+	return errs.next
+}
+
+// HTTPError described a transport-layer error that is returned when the RPC
+// server can not be reached for some reason.
+type HTTPError struct {
+	StatusCode int
+	Body       string
+	Headers    http.Header
+}
+
+func (err HTTPError) Error() string {
+	return fmt.Sprintf("%s (status: %d, headers: %+v)", err.Body, err.StatusCode, err.Headers)
+}
+
+// Error describes the error format returned by the RPC server.
+type Error struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message"`
+	Data    ErrorData `json:"data"`
+}
+
+func (err Error) Error() string {
+	return fmt.Sprintf("%s (code: %d, data: %+v)", err.Message, err.Code, err.Data)
+}
+
+// ErrorData describes possible error data fields for the Clarify RPC server.
+type ErrorData struct {
+	Trace            string              `json:"trace"`
+	Params           map[string][]string `json:"params,omitempty"`
+	InvalidResources []InvalidResource   `json:"invalidResources,omitempty"`
+	PartialResult    json.RawMessage     `json:"partialResult,omitempty"`
+}
+
+// InvalidResource describes an invalid resource.
+type InvalidResource struct {
+	ID            string              `json:"id,omitempty"`
+	Type          string              `json:"type"`
+	Message       string              `json:"message"`
+	InvalidFields map[string][]string `json:"invalidFields,omitempty"`
+}
