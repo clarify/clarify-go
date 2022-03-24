@@ -15,11 +15,13 @@
 package clarify_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/jsonrpc"
 )
 
@@ -30,8 +32,8 @@ type mockRPCHandler map[string]mockRPCResponse
 func (m mockRPCHandler) Do(ctx context.Context, req jsonrpc.Request, result any) error {
 	resp, ok := m[strings.ToLower(req.Method)]
 	if !ok {
-		return &jsonrpc.Error{
-			Code:    jsonrpc.CodeMethodNotFound,
+		return &clarify.ServerError{
+			Code:    clarify.CodeMethodNotFound,
 			Message: "Method not found",
 			Data: jsonrpc.ErrorData{
 				Trace: exampleTrace,
@@ -41,13 +43,17 @@ func (m mockRPCHandler) Do(ctx context.Context, req jsonrpc.Request, result any)
 	if resp.err != nil {
 		return resp.err
 	}
-	if err := json.Unmarshal(resp.rawResult, result); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(resp.rawResult))
+	// DisallowUnknownFields is useful for discovering issues in testdata or
+	// models; production clients should not use it.
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(result); err != nil {
 		return fmt.Errorf("%w: %v", jsonrpc.ErrBadResponse, err)
 	}
 	return nil
 }
 
 type mockRPCResponse struct {
-	err       *jsonrpc.Error
+	err       *clarify.ServerError
 	rawResult json.RawMessage
 }

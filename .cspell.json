@@ -3,8 +3,8 @@
   "ignorePaths": [],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": [],
-  "ignoreWords": ["Searis", "rollup"],
+  "words": ["hashable"],
+  "ignoreWords": ["Searis", "debugf", "rollup"],
   "import": [],
   "ignoreRegExpList": ["/[a-v0-9]{20}/"]
 }

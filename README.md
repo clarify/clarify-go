@@ -8,11 +8,11 @@ This repository contains a Go(lang) SDK from [Clarify][clarify]. Clarify is a cl
 
 ## Risk of breaking changes
 
-This SDK is following [semantic versioning][semver]. The SDK is currently in a v0 state, which means that we reserver the right to introduce breaking changes in MINOR releases.
+This SDK is following [Semantic Versioning][semver]. The SDK is currently in a v0 state, which means that we reserver the right to introduce breaking changes without increasing the MAJOR number.
 
 ## Features
 
-This SDK is currently written for [Clarify API v1.0][docs-v1], and include the following features:
+This SDK is currently written for [Clarify API v1.1beta2][docs-v1.1beta2], and include the following features:
 
 - Compose Clarify data frames using the `data` sub-package.
 - Write signal meta-data to Clarify with `client.SaveSignals`. See [example](examples/save_signals/).
@@ -21,7 +21,7 @@ This SDK is currently written for [Clarify API v1.0][docs-v1], and include the f
 [clarify]: https://clarify.io/
 [semver]: https://semver.org/
 [docs]: https://docs.clarify.io
-[docs-v1]: https://docs.clarify.io/
+[docs-v1.1beta2]: https://docs.clarify.io/1.1beta2
 
 ## Copyright
 
