@@ -14,7 +14,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.18
         id: go
 
       - name: Checkout
@@ -54,12 +54,12 @@ jobs:
       # Run golangci-lint in same job as tests as the golangci-lint task can not
       # resolve private dependencies.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.44
-          skip-go-installation: true
+          version: v1.45
           github-token: ${{ secrets.GITHUB_TOKEN }}
           only-new-issues: false
+          skip-cache: false
           skip-pkg-cache: true
           skip-build-cache: true
           args: --timeout=10m
