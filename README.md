@@ -12,7 +12,7 @@ This SDK is following [semantic versioning][semver]. The SDK is currently in a v
 
 ## Features
 
-This SDK is currently written for [Clarify API v1][docs-v1], and include the following features:
+This SDK is currently written for [Clarify API v1.0][docs-v1], and include the following features:
 
 - Compose Clarify data frames using the `data` sub-package.
 - Write signal meta-data to Clarify with `client.SaveSignals`. See [example](examples/save_signals/).
@@ -21,7 +21,7 @@ This SDK is currently written for [Clarify API v1][docs-v1], and include the fol
 [clarify]: https://clarify.io/
 [semver]: https://semver.org/
 [docs]: https://docs.clarify.io
-[docs-v1]: https://docs.clarify.io/api/1.0/release-notes
+[docs-v1]: https://docs.clarify.io/
 
 ## Copyright
 
