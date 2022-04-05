@@ -7,3 +7,13 @@ linters:
     - misspell # Finds commonly misspelled English words in comments
     - rowserrcheck # checks whether Err of rows is checked successfully
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
+    - goheader # Checks is file header matches to pattern
+
+linters-settings:
+  goheader:
+    values:
+      const:
+        COMPANY: Searis AS
+      regexp:
+        ANY_AUTHOR: (, .*)*
+    template-path: .go-header.tmpl
