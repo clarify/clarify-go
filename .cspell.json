@@ -1,0 +1,10 @@
+{
+  "version": "0.2",
+  "ignorePaths": [],
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
+  "words": [],
+  "ignoreWords": ["Searis", "rollup"],
+  "import": [],
+  "ignoreRegExpList": ["/[a-v0-9]{20}/"]
+}
