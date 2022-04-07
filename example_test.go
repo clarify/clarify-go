@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/data"
 	"github.com/clarify/clarify-go/filter"
 	"github.com/clarify/clarify-go/testdata"
 )
@@ -97,7 +96,7 @@ func ExampleClient_DataFrame() {
 			time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
 			time.Date(2022, 1, 1, 4, 0, 0, 0, time.UTC),
 		).
-		RollupBucket(data.Hour).
+		RollupBucket(time.Hour).
 		Include("items").
 		Do(ctx)
 

@@ -15,7 +15,6 @@
 package clarify
 
 import (
-	"github.com/clarify/clarify-go/data"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/resource"
 )
@@ -77,16 +76,16 @@ type ItemAttributes struct {
 
 // ItemWriteAttributes describe the writable item attributes.
 type ItemWriteAttributes struct {
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	ValueType      ValueType          `json:"valueType"`
-	SourceType     SourceType         `json:"sourceType"`
-	EngUnit        string             `json:"engUnit"`
-	SampleInterval data.FixedDuration `json:"sampleInterval"`
-	GapDetection   data.FixedDuration `json:"gapDetection"`
-	Labels         fields.Labels      `json:"labels"`
-	EnumValues     fields.EnumValues  `json:"enumValues"`
-	Visible        bool               `json:"visible"`
+	Name           string               `json:"name"`
+	Description    string               `json:"description"`
+	ValueType      ValueType            `json:"valueType"`
+	SourceType     SourceType           `json:"sourceType"`
+	EngUnit        string               `json:"engUnit"`
+	SampleInterval fields.FixedDuration `json:"sampleInterval"`
+	GapDetection   fields.FixedDuration `json:"gapDetection"`
+	Labels         fields.Labels        `json:"labels"`
+	EnumValues     fields.EnumValues    `json:"enumValues"`
+	Visible        bool                 `json:"visible"`
 }
 
 // ItemRelationships describe the item relationships that's exposed by the API.

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go/data"
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/filter"
 	"github.com/clarify/clarify-go/resource"
 )
@@ -95,9 +96,9 @@ func (req DataFrameRequest) RollupWindow() DataFrameRequest {
 
 // RollupBucket sets the query to rollup all data into fixed size bucket
 // when d > 0. Otherwise, clear the rollup information from the query.
-func (req DataFrameRequest) RollupBucket(d data.FixedDuration) DataFrameRequest {
+func (req DataFrameRequest) RollupBucket(d time.Duration) DataFrameRequest {
 	if d > 0 {
-		req.data.Rollup = d.String()
+		req.data.Rollup = fields.AsFixedDuration(d).String()
 	} else {
 		req.data.Rollup = ""
 	}
