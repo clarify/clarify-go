@@ -36,7 +36,7 @@ func (cfg SaveMethod[D, R]) NewRequest(h jsonrpc.Handler, data D, params ...json
 		apiVersion: cfg.APIVersion,
 		method:     cfg.Method,
 		dataParam:  jsonrpc.ParamName(cfg.DataParam),
-
+		data:       data,
 		baseParams: params,
 		h:          h,
 	}
@@ -65,7 +65,7 @@ func (req SaveRequest[D, R]) CreateOnly() SaveRequest[D, R] {
 
 // Do performs the request against the server and returns the result.
 func (req SaveRequest[D, R]) Do(ctx context.Context, extraParams ...jsonrpc.Param) (*R, error) {
-	params := make([]jsonrpc.Param, len(req.baseParams)+2+len(extraParams))
+	params := make([]jsonrpc.Param, 0, len(req.baseParams)+2+len(extraParams))
 	params = append(params, req.baseParams...)
 	params = append(params,
 		req.dataParam.Value(req.data),

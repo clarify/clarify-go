@@ -50,7 +50,7 @@ type Request[R any] struct {
 
 // Do performs the request against the server and returns the result.
 func (req Request[R]) Do(ctx context.Context, extraParams ...jsonrpc.Param) (*R, error) {
-	params := make([]jsonrpc.Param, len(req.baseParams)+len(extraParams))
+	params := make([]jsonrpc.Param, 0, len(req.baseParams)+len(extraParams))
 	params = append(params, req.baseParams...)
 	params = append(params, extraParams...)
 

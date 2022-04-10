@@ -42,7 +42,7 @@ func NewClient(integration string, h jsonrpc.Handler) *Client {
 // access to the integration namespace. Will insert the data to the integration
 // set in c.
 func (c *Client) Insert(data data.Frame) resource.Request[InsertResult] {
-	return methodInsert.NewRequest(c.h, paramData.Value(data))
+	return methodInsert.NewRequest(c.h, paramIntegration.Value(c.integration), paramData.Value(data))
 }
 
 // InsertResult holds the result of an Insert operation.
@@ -79,7 +79,7 @@ var methodSaveSignals = resource.SaveMethod[map[string]SignalSave, SaveSignalsRe
 // Disclaimer: this method is based on a pre-release of the Clarify API, and
 // might be unstable or stop working.
 func (c *Client) PublishSignals(integration string, itemsBySignal map[string]ItemSave) resource.SaveRequest[map[string]ItemSave, PublishSignalsResult] {
-	return methodPublishSignals.NewRequest(c.h, itemsBySignal, paramIntegration.Value(c.integration))
+	return methodPublishSignals.NewRequest(c.h, itemsBySignal, paramIntegration.Value(integration))
 }
 
 // PublishSignalsResult holds the result of a PublishSignals operation.
