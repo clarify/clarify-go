@@ -80,17 +80,17 @@ func MultiOperator(cmps ...Comparison) Comparison {
 			if len(v.NotIn) > 0 {
 				target.NotIn = v.NotIn
 			}
-			if v.GreaterThan != nil {
-				target.GreaterThan = v.GreaterThan
+			if v.Greater != nil {
+				target.Greater = v.Greater
 			}
-			if v.GreaterThanOrEqual != nil {
-				target.GreaterThanOrEqual = v.GreaterThanOrEqual
+			if v.GreaterOrEqual != nil {
+				target.GreaterOrEqual = v.GreaterOrEqual
 			}
-			if v.LessThan != nil {
-				target.LessThan = v.LessThan
+			if v.Less != nil {
+				target.Less = v.Less
 			}
-			if v.LessThanOrEqual != nil {
-				target.LessThanOrEqual = v.LessThanOrEqual
+			if v.LessOrEqual != nil {
+				target.LessOrEqual = v.LessOrEqual
 			}
 			if v.Regex != "" {
 				target.Regex = v.Regex
@@ -103,13 +103,13 @@ func MultiOperator(cmps ...Comparison) Comparison {
 }
 
 type opComparison struct {
-	In                 []json.RawMessage `json:"$in,omitempty"`
-	NotIn              []json.RawMessage `json:"$nin,omitempty"`
-	GreaterThan        json.RawMessage   `json:"$gt,omitempty"`
-	GreaterThanOrEqual json.RawMessage   `json:"$gte,omitempty"`
-	LessThan           json.RawMessage   `json:"$lt,omitempty"`
-	LessThanOrEqual    json.RawMessage   `json:"$lte,omitempty"`
-	Regex              string            `json:"$regex,omitempty"`
+	In             []json.RawMessage `json:"$in,omitempty"`
+	NotIn          []json.RawMessage `json:"$nin,omitempty"`
+	Greater        json.RawMessage   `json:"$gt,omitempty"`
+	GreaterOrEqual json.RawMessage   `json:"$gte,omitempty"`
+	Less           json.RawMessage   `json:"$lt,omitempty"`
+	LessOrEqual    json.RawMessage   `json:"$lte,omitempty"`
+	Regex          string            `json:"$regex,omitempty"`
 }
 
 func (cmp *opComparison) normalize() *opComparison {
@@ -119,10 +119,10 @@ func (cmp *opComparison) normalize() *opComparison {
 	//   - opComparison{} -> nil
 	//
 	isEmptyExceptIn := (cmp.NotIn == nil &&
-		cmp.GreaterThan == nil &&
-		cmp.GreaterThanOrEqual == nil &&
-		cmp.LessThan == nil &&
-		cmp.LessThanOrEqual == nil &&
+		cmp.Greater == nil &&
+		cmp.GreaterOrEqual == nil &&
+		cmp.Less == nil &&
+		cmp.LessOrEqual == nil &&
 		cmp.Regex == "")
 	switch {
 	case isEmptyExceptIn && cmp.In == nil:
@@ -179,35 +179,35 @@ func NotIn[E any](elements ...E) Comparison {
 	}
 }
 
-// GreaterThan returns a comparison that matches values > gte. Panics if gt is
-// not JSON marshalable into an a sortable JSON type (string or number).
-func GreaterThan(gt any) Comparison {
-	return Comparison{
-		value: &opComparison{GreaterThan: orderedJSONType(gt)},
-	}
-}
-
-// GreaterThanOrEqual returns a comparison that matches values >= gte. Panics if
-// gte is not JSON marshalable into an a sortable JSON type (string or number).
-func GreaterThanOrEqual(gte any) Comparison {
-	return Comparison{
-		value: &opComparison{GreaterThanOrEqual: orderedJSONType(gte)},
-	}
-}
-
-// LessThan returns a comparison that matches values < lt. Panics if lt is not
+// Greater returns a comparison that matches values > gte. Panics if gt is not
 // JSON marshalable into an a sortable JSON type (string or number).
-func LessThan(lt any) Comparison {
+func Greater(gt any) Comparison {
 	return Comparison{
-		value: &opComparison{LessThan: orderedJSONType(lt)},
+		value: &opComparison{Greater: orderedJSONType(gt)},
 	}
 }
 
-// LessThanOrEqual returns a comparison that matches values <= lte. Panics if
-// lte is not JSON marshalable into an a sortable JSON type (string or number).
-func LessThanOrEqual(lte any) Comparison {
+// GreaterOrEqual returns a comparison that matches values >= gte. Panics if gte
+// is not JSON marshalable into an a sortable JSON type (string or number).
+func GreaterOrEqual(gte any) Comparison {
 	return Comparison{
-		value: &opComparison{LessThanOrEqual: orderedJSONType(lte)},
+		value: &opComparison{GreaterOrEqual: orderedJSONType(gte)},
+	}
+}
+
+// Less returns a comparison that matches values < lt. Panics if lt is not JSON
+// marshalable into an a sortable JSON type (string or number).
+func Less(lt any) Comparison {
+	return Comparison{
+		value: &opComparison{Less: orderedJSONType(lt)},
+	}
+}
+
+// LessOrEqual returns a comparison that matches values <= lte. Panics if lte is
+// not JSON marshalable into an a sortable JSON type (string or number).
+func LessOrEqual(lte any) Comparison {
+	return Comparison{
+		value: &opComparison{LessOrEqual: orderedJSONType(lte)},
 	}
 }
 
@@ -217,8 +217,8 @@ func LessThanOrEqual(lte any) Comparison {
 func Range(gte, lt any) Comparison {
 	return Comparison{
 		value: &opComparison{
-			GreaterThanOrEqual: orderedJSONType(gte),
-			LessThan:           orderedJSONType(lt),
+			GreaterOrEqual: orderedJSONType(gte),
+			Less:           orderedJSONType(lt),
 		},
 	}
 }

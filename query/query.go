@@ -46,14 +46,14 @@ type DataFilter struct {
 // DataTimesComparison allows filtering times. The zero-value indicate API
 // defaults.
 type DataTimesComparison struct {
-	GreaterThanOrEqual time.Time `json:"$gte,omitempty"`
-	LessThan           time.Time `json:"$lt,omitempty"`
+	GreaterOrEqual time.Time `json:"$gte,omitempty"`
+	Less           time.Time `json:"$lt,omitempty"`
 }
 
 // DataTimesRange matches times within the specified range.
 func DataTimesRange(gte, lt time.Time) DataTimesComparison {
 	return DataTimesComparison{
-		GreaterThanOrEqual: gte,
-		LessThan:           lt,
+		GreaterOrEqual: gte,
+		Less:           lt,
 	}
 }
