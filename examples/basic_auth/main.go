@@ -6,7 +6,8 @@ import (
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/data"
+	"github.com/clarify/clarify-go/fields"
+	"github.com/clarify/clarify-go/views"
 )
 
 func main() {
@@ -18,9 +19,9 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	t1 := data.AsTimestamp(time.Now())
+	t1 := fields.AsTimestamp(time.Now())
 	t2 := t1.Add(time.Hour)
-	df := data.Frame{
+	df := views.DataFrame{
 		"a": {t1: 1.0, t2: 1.2},
 		"b": {t1: 2.0},
 	}

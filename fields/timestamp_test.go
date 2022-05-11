@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package data_test
+package fields_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/clarify/clarify-go/data"
+	data "github.com/clarify/clarify-go/fields"
 )
 
 func TestOriginTime(t *testing.T) {
