@@ -18,7 +18,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/clarify/clarify-go/data"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/query"
 	"github.com/clarify/clarify-go/resource"
@@ -33,7 +32,7 @@ type DataFrameRequest struct {
 
 type DataFrameResult = struct {
 	Meta     resource.SelectionMeta `json:"meta"`
-	Data     data.Frame             `json:"data"`
+	Data     views.DataFrame        `json:"data"`
 	Included DataFrameInclude       `json:"included"`
 }
 

@@ -12,41 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package data
+package views
 
 import (
 	"encoding/json"
 	"math"
 	"sort"
+
+	"github.com/clarify/clarify-go/fields"
 )
 
 var (
-	_ json.Unmarshaler = (*Frame)(nil)
+	_ json.Unmarshaler = (*DataFrame)(nil)
 
-	_ json.Marshaler = Frame{}
+	_ json.Marshaler = DataFrame{}
 
 	_ sort.Interface = rawDataFrame{}
 )
 
-// Series contain a map of timestamps in micro seconds since the epoch to
+// DataSeries contain a map of timestamps in micro seconds since the epoch to
 // a floating point value.
-type Series map[Timestamp]float64
+type DataSeries map[fields.Timestamp]float64
 
-// Frame provides JSON encoding and decoding for a map of series identified
+// DataFrame provides JSON encoding and decoding for a map of series identified
 // by an arbitrary key.
-type Frame map[string]Series
+type DataFrame map[string]DataSeries
 
 // ordered returns a valid and ordered RawDataFrame with duplicated entries
 // removed.
-func (df Frame) ordered() rawDataFrame {
-	times := map[Timestamp]struct{}{}
+func (df DataFrame) ordered() rawDataFrame {
+	times := map[fields.Timestamp]struct{}{}
 	for _, series := range df {
 		for ts := range series {
 			times[ts] = struct{}{}
 		}
 	}
 
-	ordered := make([]Timestamp, 0, len(times))
+	ordered := make([]fields.Timestamp, 0, len(times))
 	for ts := range times {
 		ordered = append(ordered, ts)
 	}
@@ -56,17 +58,17 @@ func (df Frame) ordered() rawDataFrame {
 
 	out := rawDataFrame{
 		Times:  ordered,
-		Series: make(map[string][]Number, len(df)),
+		Series: make(map[string][]fields.Number, len(df)),
 	}
 	for sid, series := range df {
-		values := make([]Number, 0, len(series))
+		values := make([]fields.Number, 0, len(series))
 		for _, ts := range out.Times {
 			f, ok := series[ts]
 			switch ok {
 			case false:
-				values = append(values, Number(math.NaN()))
+				values = append(values, fields.Number(math.NaN()))
 			default:
-				values = append(values, Number(f))
+				values = append(values, fields.Number(f))
 			}
 		}
 		out.Series[sid] = values
@@ -74,13 +76,13 @@ func (df Frame) ordered() rawDataFrame {
 	return out
 }
 
-func (df Frame) MarshalJSON() ([]byte, error) {
+func (df DataFrame) MarshalJSON() ([]byte, error) {
 	return json.Marshal(df.ordered())
 }
 
-func (df *Frame) UnmarshalJSON(b []byte) error {
+func (df *DataFrame) UnmarshalJSON(b []byte) error {
 	in := rawDataFrame{
-		Series: make(map[string][]Number),
+		Series: make(map[string][]fields.Number),
 	}
 
 	if err := json.Unmarshal(b, &in); err != nil {
@@ -95,8 +97,8 @@ func (df *Frame) UnmarshalJSON(b []byte) error {
 // Series can have different length, and there can be multiple instances of the
 // same time.
 type rawDataFrame struct {
-	Times  []Timestamp         `json:"times"`
-	Series map[string][]Number `json:"series"`
+	Times  []fields.Timestamp         `json:"times"`
+	Series map[string][]fields.Number `json:"series"`
 }
 
 func (raw rawDataFrame) Len() int {
@@ -119,14 +121,14 @@ func (raw rawDataFrame) Swap(i, j int) {
 // a series contain more values than we have timestamps, the additional values
 // are dropped. Likewise, if a series contain fewer samples than timestamps,
 // that's fine as far as the conversion is concerned.
-func (raw rawDataFrame) DataFrame() Frame {
-	out := make(Frame, len(raw.Series))
+func (raw rawDataFrame) DataFrame() DataFrame {
+	out := make(DataFrame, len(raw.Series))
 	for sid, values := range raw.Series {
 		l := len(values)
 		if len(values) > len(raw.Times) {
 			l = len(raw.Times)
 		}
-		series := make(Series, l)
+		series := make(DataSeries, l)
 		for i := 0; i < l; i++ {
 			f := float64(values[i])
 			if !math.IsNaN(f) {

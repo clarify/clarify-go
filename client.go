@@ -15,7 +15,6 @@
 package clarify
 
 import (
-	"github.com/clarify/clarify-go/data"
 	"github.com/clarify/clarify-go/jsonrpc"
 	"github.com/clarify/clarify-go/resource"
 	"github.com/clarify/clarify-go/views"
@@ -42,7 +41,7 @@ func NewClient(integration string, h jsonrpc.Handler) *Client {
 // Insert returns a new insert request that can be executed at will. Requires
 // access to the integration namespace. Will insert the data to the integration
 // set in c.
-func (c *Client) Insert(data data.Frame) resource.Request[InsertResult] {
+func (c *Client) Insert(data views.DataFrame) resource.Request[InsertResult] {
 	return methodInsert.NewRequest(c.h, paramIntegration.Value(c.integration), paramData.Value(data))
 }
 
