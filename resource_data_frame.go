@@ -100,6 +100,11 @@ func (req DataFrameRequest) RollupBucket(d time.Duration) DataFrameRequest {
 	return req
 }
 
+func (req DataFrameRequest) Last(count int) DataFrameRequest {
+	req.data.Last = count
+	return req
+}
+
 // Do performs the request against the server and returns the result.
 func (req DataFrameRequest) Do(ctx context.Context) (*DataFrameResult, error) {
 	return req.parent.Do(ctx, paramData.Value(req.data))
