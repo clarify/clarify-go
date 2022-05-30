@@ -75,16 +75,23 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 		Result:     result,
 		APIVersion: httpResp.Header.Get(headerAPIVersion),
 	}
-	dec := json.NewDecoder(httpResp.Body)
+	var buf bytes.Buffer
+	dec := json.NewDecoder(io.TeeReader(httpResp.Body, &buf))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&resp); err != nil {
-		return fmt.Errorf("%w: %v", ErrBadResponse, err)
+		trace := httpResp.Header.Get("traceparent")
+		data := buf.Bytes()
+		return fmt.Errorf("%w: %v (traceparent: %s, body: %s)", ErrBadResponse, err, trace, data)
 	}
 	if resp.JSONRPC != "2.0" {
-		return fmt.Errorf(`%w: jsonrpc must be "2.0"`, ErrBadResponse)
+		trace := httpResp.Header.Get("traceparent")
+		data := buf.Bytes()
+		return fmt.Errorf(`%w: jsonrpc must be "2.0" (trace: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
 	if resp.ID != req.ID {
-		return fmt.Errorf(`%w: id must match request`, ErrBadResponse)
+		trace := httpResp.Header.Get("traceparent")
+		data := buf.Bytes()
+		return fmt.Errorf(`%w: id must match request (trace: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
 	if err := resp.Error; err != nil {
 		return err
