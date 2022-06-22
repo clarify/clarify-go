@@ -22,7 +22,7 @@ import (
 )
 
 func TestParseFixedDuration(t *testing.T) {
-	tcs := []struct {
+	testCases := []struct {
 		s   string
 		d   time.Duration
 		err error
@@ -42,7 +42,7 @@ func TestParseFixedDuration(t *testing.T) {
 		{s: "P1W", d: time.Hour * 24 * 7},
 	}
 
-	for _, tc := range tcs {
+	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.s, func(t *testing.T) {
 			d, err := fields.ParseFixedDuration(tc.s)
