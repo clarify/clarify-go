@@ -27,7 +27,7 @@ type ItemInclude struct{}
 // ItemSave describe the save view for an item.
 type ItemSave struct {
 	ItemSaveAttributes
-	resource.MetaSave
+	MetaSave
 }
 
 // PublishedItem constructs a view for an item based on the passed in signal,

@@ -7,7 +7,6 @@ import (
 
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/fields"
-	"github.com/clarify/clarify-go/jsonrpc/resource"
 	"github.com/clarify/clarify-go/views"
 )
 
@@ -32,7 +31,7 @@ func main() {
 
 	inputs := map[string]views.SignalSave{
 		"a": {
-			MetaSave: resource.MetaSave{
+			MetaSave: views.MetaSave{
 				Annotations: annotations,
 			},
 			SignalSaveAttributes: views.SignalSaveAttributes{
@@ -44,7 +43,7 @@ func main() {
 			},
 		},
 		"b": {
-			MetaSave: resource.MetaSave{
+			MetaSave: views.MetaSave{
 				Annotations: annotations,
 			},
 			SignalSaveAttributes: views.SignalSaveAttributes{
