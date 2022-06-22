@@ -20,11 +20,14 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	t1 := fields.AsTimestamp(time.Now())
-	t2 := t1.Add(time.Hour)
+	t0 := fields.AsTimestamp(time.Now()).Truncate(time.Hour)
+	t1 := t0.Add(15 * time.Minute)
+	t2 := t1.Add(15 * time.Minute)
+	t3 := t2.Add(15 * time.Minute)
+	t4 := t0.Add(24 * time.Hour)
 	df := views.DataFrame{
-		"a": {t1: 1.0, t2: 1.2},
-		"b": {t1: 2.0},
+		"banana-stand/amount": {t0: 250000, t4: 0},
+		"banana-stand/status": {t0: 0, t1: 0, t2: 1, t3: 1, t4: 0},
 	}
 
 	result, err := client.Insert(df).Do(ctx)

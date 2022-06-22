@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	// To select or publish signals, you must grant the integration access to
+	// the "admin" namespace in the Clarify admin panel.
 	creds, err := clarify.CredentialsFromFile("clarify-credentials.json")
 	if err != nil {
 		panic(err)
@@ -18,16 +20,15 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	// To select or publish signals, you must enable access to the "admin"
-	// namespace in clarify; this allows selecting and publishing signals from
-	// all integrations in the organization, but for the example, we will use
-	// the integrationID from the credentials file.
+	// For this example, the signals we want to select are created by the same
+	// integration that we are using to select them. Note that this isn't a
+	// requirement; for production cases, you may want this integration ID to be
+	// configured to be something else.
 	integrationID := creds.Integration
 
 	result, err := client.SelectSignals(integrationID).Filter(query.Comparisons{
 		"annotations.clarify/clarify-go/example/name": query.Equal("save_signals"),
-		"input": query.In("a", "b"),
-	}).Include("item").Do(ctx)
+	}).Limit(10).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

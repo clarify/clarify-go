@@ -20,11 +20,13 @@ func main() {
 	client := creds.Client(ctx)
 
 	t1 := time.Now().Add(-24 * time.Hour)
-	t2 := time.Now()
+	t2 := time.Now().Add(24 * time.Hour)
 
-	result, err := client.DataFrame().Limit(5).TimeRange(t1, t2).RollupBucket(15 * time.Minute).Last(3).Filter(
+	// To select item data or meta-data, you must grant the integration access
+	// to the "clarify" namespace in the Clarify admin panel.
+	result, err := client.DataFrame().TimeRange(t1, t2).RollupBucket(time.Hour).Filter(
 		query.Field("annotations.clarify/clarify-go/example/name", query.Equal("publish_signals")),
-	).Do(ctx)
+	).Limit(10).Do(ctx)
 	if err != nil {
 		panic(err)
 	}
