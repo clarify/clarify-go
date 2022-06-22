@@ -38,10 +38,15 @@ const (
 // OriginTime). Note that this is not fully equivalent to using Truncate on the
 // time.Time type, as we are deliberately using a different origin.
 func (ts Timestamp) Truncate(d time.Duration) Timestamp {
-	if d == 0 {
+	if d <= 0 {
 		return ts
 	}
-	r := (ts - OriginTime) % Timestamp(d)
+	td := Timestamp(d) / 1e3
+
+	r := (ts - OriginTime) % td
+	if r < 0 {
+		r += td
+	}
 	return ts - r
 }
 
