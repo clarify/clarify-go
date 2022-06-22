@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"time"
 
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/fields"
@@ -19,39 +20,49 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	// Tools can add annotations to Clarify resources to track state or drive
-	// logic. Annotations is the only field that is merged on save. Since the
-	// live in the meta section on select, they do not affect attributesHash or
-	// relationshipsHash in select views.
-	annotations := fields.Annotations{
-		// Annotations should include a prefix:
-		// <company domain or github org>/<app name>/
-		"clarify/clarify-go/example/name": "save_signals",
-	}
-
 	inputs := map[string]views.SignalSave{
-		"a": {
+		"banana-stand/amount": {
 			MetaSave: views.MetaSave{
-				Annotations: annotations,
+				Annotations: fields.Annotations{
+					// Annotation keys should be prefixed to avoid collision.
+					"clarify/clarify-go/example/name": "save_signals",
+				},
 			},
 			SignalSaveAttributes: views.SignalSaveAttributes{
-				Name: "Signal A",
+				Name:        "Amount",
+				Description: "Amount at location, counted manually.",
 				Labels: fields.Labels{
-					"data-source": {"<your data-source name>"},
-					"location":    {"<your location name>"},
+					// Label keys generally does not need to be prefixed.
+					"data-source": {"manual"},
+					"location":    {"banana stand", "pier"},
 				},
+				EngUnit: "USD",
 			},
 		},
-		"b": {
+		"banana-stand/status": {
 			MetaSave: views.MetaSave{
-				Annotations: annotations,
+				Annotations: fields.Annotations{
+					// Annotation keys should be prefixed to avoid collision.
+					"clarify/clarify-go/example/name":    "save_signals",
+					"clarify/clarify-go/example/publish": "true",
+				},
 			},
 			SignalSaveAttributes: views.SignalSaveAttributes{
-				Name: "Signal B",
+				Name:        "Building status",
+				Description: "Overall building status, aggregated from environmental sensors.",
 				Labels: fields.Labels{
-					"data-source": {"<your data-source name>"},
-					"location":    {"<your location name>"},
+					// Label keys generally does not need to be prefixed.
+					"data-source": {"environmental sensors"},
+					"location":    {"banana stand", "pier"},
 				},
+				SourceType: views.Aggregation,
+				ValueType:  views.Enum,
+				EnumValues: fields.EnumValues{
+					0: "not on fire",
+					1: "on fire",
+				},
+				SampleInterval: fields.AsFixedDuration(15 * time.Minute),
+				GapDetection:   fields.AsFixedDuration(2 * time.Hour),
 			},
 		},
 	}
