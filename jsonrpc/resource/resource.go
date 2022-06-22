@@ -128,8 +128,3 @@ type Meta struct {
 	CreatedAt         time.Time          `json:"createdAt"`
 	UpdatedAt         time.Time          `json:"updatedAt"`
 }
-
-// MetaSave holds the mutable meta data fields for a resource entry.
-type MetaSave struct {
-	Annotations fields.Annotations `json:"annotations,omitempty"`
-}

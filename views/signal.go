@@ -28,7 +28,7 @@ type SignalInclude struct {
 
 // SignalSave describe the save view for a signal.
 type SignalSave struct {
-	resource.MetaSave
+	MetaSave
 	SignalSaveAttributes
 }
 
