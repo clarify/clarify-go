@@ -61,15 +61,6 @@ func (req SelectRequest[R]) Filter(f query.FilterType) SelectRequest[R] {
 	return req
 }
 
-// FilterField returns a new request with the specified field filter added to
-// existing filters with logical AND.
-//
-// Deprecated: use Filter(query.Field(path, cmp)) instead.
-func (req SelectRequest[R]) FilterField(path string, cmp query.Comparison) SelectRequest[R] {
-	req.query.Filter = query.And(req.query.Filter, query.Field(path, cmp))
-	return req
-}
-
 // Limit returns a new request that limits the number of matches. Setting n < 0
 // will use the default limit.
 func (req SelectRequest[R]) Limit(n int) SelectRequest[R] {

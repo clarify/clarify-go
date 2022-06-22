@@ -49,15 +49,6 @@ func (req DataFrameRequest) Filter(filter query.FilterType) DataFrameRequest {
 	return req
 }
 
-// FilterField returns a new request that includes Items matching the
-// provided filter.
-//
-// Deprecated: use Filter(query.Field(path, cmp)) instead.
-func (req DataFrameRequest) FilterField(path string, cmp query.Comparison) DataFrameRequest {
-	req.parent = req.parent.FilterField(path, cmp)
-	return req
-}
-
 // Limit returns a new request that limits the number of matches. Setting n < 0
 // will use the max limit.
 func (req DataFrameRequest) Limit(n int) DataFrameRequest {
