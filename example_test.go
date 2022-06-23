@@ -75,7 +75,6 @@ func ExampleClient_SelectSignals() {
 }
 
 func ExampleClient_DataFrame() {
-	const inputID = "temp"
 	const integrationID = "c8ktonqsahsmemfs7lv0"
 	const itemID = "c8l95d2sahsh22imiabg"
 

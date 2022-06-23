@@ -43,7 +43,6 @@ type Request[R any] struct {
 	method     string
 
 	baseParams []jsonrpc.Param
-	createOnly bool
 
 	h jsonrpc.Handler
 }

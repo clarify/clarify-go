@@ -5,8 +5,6 @@ linters:
     - gci # Control golang package import order and make it always deterministic.
     - godot # Check if comments end in a period.
     - misspell # Finds commonly misspelled English words in comments.
-    - rowserrcheck # Checks whether Err of rows is checked successfully.
-    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
     - goheader # Checks is file header matches pattern.
 
 linters-settings:
@@ -15,5 +13,5 @@ linters-settings:
       const:
         COMPANY: Searis AS
       regexp:
-        ANY_AUTHOR: (, .*)*
+        ANY_AUTHOR: "(.*)"
     template-path: .go-header.tmpl
