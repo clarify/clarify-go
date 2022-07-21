@@ -28,7 +28,7 @@ var (
 
 	_ json.Marshaler = DataFrame{}
 
-	_ sort.Interface = rawDataFrame{}
+	_ sort.Interface = RawDataFrame{}
 )
 
 // DataSeries contain a map of timestamps in micro seconds since the epoch to
@@ -39,9 +39,9 @@ type DataSeries map[fields.Timestamp]float64
 // by an arbitrary key.
 type DataFrame map[string]DataSeries
 
-// ordered returns a valid and ordered RawDataFrame with duplicated entries
+// Ordered returns a valid and Ordered RawDataFrame with duplicated entries
 // removed.
-func (df DataFrame) ordered() rawDataFrame {
+func (df DataFrame) Ordered() RawDataFrame {
 	times := map[fields.Timestamp]struct{}{}
 	for _, series := range df {
 		for ts := range series {
@@ -55,7 +55,7 @@ func (df DataFrame) ordered() rawDataFrame {
 	}
 	slices.Sort(ordered)
 
-	out := rawDataFrame{
+	out := RawDataFrame{
 		Times:  ordered,
 		Series: make(map[string][]fields.Number, len(df)),
 	}
@@ -76,11 +76,11 @@ func (df DataFrame) ordered() rawDataFrame {
 }
 
 func (df DataFrame) MarshalJSON() ([]byte, error) {
-	return json.Marshal(df.ordered())
+	return json.Marshal(df.Ordered())
 }
 
 func (df *DataFrame) UnmarshalJSON(b []byte) error {
-	in := rawDataFrame{
+	in := RawDataFrame{
 		Series: make(map[string][]fields.Number),
 	}
 
@@ -92,23 +92,23 @@ func (df *DataFrame) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// rawDataFrame describes a data frame that isn't necessarily valid or ordered.
+// RawDataFrame describes a data frame that isn't necessarily valid or ordered.
 // Series can have different length, and there can be multiple instances of the
 // same time.
-type rawDataFrame struct {
+type RawDataFrame struct {
 	Times  []fields.Timestamp         `json:"times"`
 	Series map[string][]fields.Number `json:"series"`
 }
 
-func (raw rawDataFrame) Len() int {
+func (raw RawDataFrame) Len() int {
 	return len(raw.Times)
 }
 
-func (raw rawDataFrame) Less(i, j int) bool {
+func (raw RawDataFrame) Less(i, j int) bool {
 	return raw.Times[i] < raw.Times[j]
 }
 
-func (raw rawDataFrame) Swap(i, j int) {
+func (raw RawDataFrame) Swap(i, j int) {
 	raw.Times[i], raw.Times[j] = raw.Times[j], raw.Times[i]
 	for _, series := range raw.Series {
 		series[i], series[j] = series[j], series[i]
@@ -120,7 +120,7 @@ func (raw rawDataFrame) Swap(i, j int) {
 // a series contain more values than we have timestamps, the additional values
 // are dropped. Likewise, if a series contain fewer samples than timestamps,
 // that's fine as far as the conversion is concerned.
-func (raw rawDataFrame) DataFrame() DataFrame {
+func (raw RawDataFrame) DataFrame() DataFrame {
 	out := make(DataFrame, len(raw.Series))
 	for sid, values := range raw.Series {
 		l := len(values)
