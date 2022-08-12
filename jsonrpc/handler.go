@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const headerAPIVersion = "X-API-Version"
@@ -33,17 +34,28 @@ type Handler interface {
 
 // HTTPHandler performs RPC requests via HTTP POST against the specified URL.
 type HTTPHandler struct {
-	Client http.Client
-	URL    string
+	Client        http.Client
+	URL           string
+	RequestLogger func(request Request, trace string, latency time.Duration, err error)
 }
 
 // Do sends the passed in request to the server, and decodes the result or error
 // from the response. Result must be a pointer.
 func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
+	var trace string
+	var err error
+	if c.RequestLogger != nil {
+		start := time.Now()
+		defer func() {
+			c.RequestLogger(req, trace, time.Since(start), err)
+		}()
+	}
+
 	body, err := json.Marshal(req)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrBadRequest, err)
 	}
+
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -62,6 +74,7 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 		return err
 	}
 	defer appendOnError(&err, httpResp.Body.Close, "; ")
+	trace = httpResp.Header.Get("traceparent")
 
 	if httpResp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(httpResp.Body)
@@ -75,21 +88,19 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 		Result:     result,
 		APIVersion: httpResp.Header.Get(headerAPIVersion),
 	}
+
 	var buf bytes.Buffer
 	dec := json.NewDecoder(io.TeeReader(httpResp.Body, &buf))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&resp); err != nil {
-		trace := httpResp.Header.Get("traceparent")
 		data := buf.Bytes()
 		return fmt.Errorf("%w: %v (traceparent: %s, body: %s)", ErrBadResponse, err, trace, data)
 	}
 	if resp.JSONRPC != "2.0" {
-		trace := httpResp.Header.Get("traceparent")
 		data := buf.Bytes()
 		return fmt.Errorf(`%w: jsonrpc must be "2.0" (trace: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
 	if resp.ID != req.ID {
-		trace := httpResp.Header.Get("traceparent")
 		data := buf.Bytes()
 		return fmt.Errorf(`%w: id must match request (trace: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
