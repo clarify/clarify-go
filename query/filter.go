@@ -40,6 +40,7 @@ var (
 		fmt.Stringer
 		FilterType
 	} = Filter{}
+	_ json.Unmarshaler = (*Filter)(nil)
 )
 
 // Field returns a new filter comparing a single field path.
@@ -119,4 +120,48 @@ func (f Filter) MarshalJSON() ([]byte, error) {
 		m["$or"] = j
 	}
 	return json.Marshal(m)
+}
+
+func (f *Filter) UnmarshalJSON(data []byte) error {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	if v, ok := m["$and"]; ok {
+		if err := json.Unmarshal(v, &f.And); err != nil {
+			return err
+		}
+		delete(m, "$and")
+	}
+	if v, ok := m["$or"]; ok {
+		if err := json.Unmarshal(v, &f.Or); err != nil {
+			return err
+		}
+		delete(m, "$or")
+	}
+	f.Paths = make(Comparisons, len(m))
+	for k, v := range m {
+		var cmp Comparison
+		if len(k) > 0 && k[0] == '$' {
+			return fmt.Errorf("bad conjunction %q", k)
+		}
+		if err := json.Unmarshal(v, &cmp); err != nil {
+			return err
+		}
+		f.Paths[k] = cmp
+	}
+
+	// Minor optimization: simplify and/or clauses with only one entry.
+	switch {
+	case len(f.Paths) == 0 && len(f.Or) == 0 && len(f.And) == 1:
+		f.Paths = f.And[0].Paths
+		f.Or = f.And[0].Or
+		f.And = nil
+	case len(f.Paths) == 0 && len(f.Or) == 1 && len(f.And) == 0:
+		f.Paths = f.Or[0].Paths
+		f.And = f.Or[0].And
+		f.Or = nil
+	}
+	return nil
 }
