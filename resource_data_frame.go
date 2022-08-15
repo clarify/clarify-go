@@ -62,6 +62,13 @@ func (req DataFrameRequest) Skip(n int) DataFrameRequest {
 	return req
 }
 
+// Sort returns a new request that sorts according to the specified fields. A
+// minus (-) prefix can be used on the filed name to indicate inverse ordering.
+func (req DataFrameRequest) Sort(fields ...string) DataFrameRequest {
+	req.parent = req.parent.Sort(fields...)
+	return req
+}
+
 // Include returns a new request set to include the specified relationships.
 func (req DataFrameRequest) Include(relationships ...string) DataFrameRequest {
 	req.parent = req.parent.Include(relationships...)
