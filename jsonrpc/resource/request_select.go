@@ -54,6 +54,13 @@ type SelectRequest[R any] struct {
 	h jsonrpc.Handler
 }
 
+// Query returns a new request that replace the internal query with the
+// specified value.
+func (req SelectRequest[R]) Query(q query.Query) SelectRequest[R] {
+	req.query = q
+	return req
+}
+
 // Filter returns a new request with the specified filter added to existing
 // filters with logical AND.
 func (req SelectRequest[R]) Filter(f query.FilterType) SelectRequest[R] {
