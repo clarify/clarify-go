@@ -22,6 +22,7 @@ type Query struct {
 	Sort   []string `json:"sort,omitempty"`
 	Limit  int      `json:"limit"`
 	Skip   int      `json:"skip"`
+	Total  bool     `json:"total"`
 }
 
 // New returns a new resource query, using the API default limit.

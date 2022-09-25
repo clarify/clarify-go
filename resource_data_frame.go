@@ -69,6 +69,13 @@ func (req DataFrameRequest) Sort(fields ...string) DataFrameRequest {
 	return req
 }
 
+// Total returns a new request that includes a total count of matches in the
+// result.
+func (req DataFrameRequest) Total() DataFrameRequest {
+	req.parent = req.parent.Total()
+	return req
+}
+
 // Include returns a new request set to include the specified relationships.
 func (req DataFrameRequest) Include(relationships ...string) DataFrameRequest {
 	req.parent = req.parent.Include(relationships...)
