@@ -68,16 +68,6 @@ func (req SelectRequest[R]) Limit(n int) SelectRequest[R] {
 	return req
 }
 
-// Include returns a new request that includes the specified related resources.
-// the provided list is appended to any existing include properties.
-func (req SelectRequest[R]) Include(relationships ...string) SelectRequest[R] {
-	a := make([]string, 0, len(req.includes)+len(relationships))
-	a = append(a, req.includes...)
-	a = append(a, relationships...)
-	req.includes = a
-	return req
-}
-
 // Skip returns a new request that skips the first n matches.
 func (req SelectRequest[R]) Skip(n int) SelectRequest[R] {
 	req.query.Skip = n
@@ -88,6 +78,23 @@ func (req SelectRequest[R]) Skip(n int) SelectRequest[R] {
 // minus (-) prefix can be used on the filed name to indicate inverse ordering.
 func (req SelectRequest[R]) Sort(fields ...string) SelectRequest[R] {
 	req.query.Sort = fields
+	return req
+}
+
+// Total returns a new request that includes a total count of matches in the
+// result.
+func (req SelectRequest[R]) Total() SelectRequest[R] {
+	req.query.Total = true
+	return req
+}
+
+// Include returns a new request that includes the specified related resources.
+// the provided list is appended to any existing include properties.
+func (req SelectRequest[R]) Include(relationships ...string) SelectRequest[R] {
+	a := make([]string, 0, len(req.includes)+len(relationships))
+	a = append(a, req.includes...)
+	a = append(a, relationships...)
+	req.includes = a
 	return req
 }
 
