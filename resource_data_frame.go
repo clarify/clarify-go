@@ -42,6 +42,13 @@ type DataFrameInclude struct {
 	Items []views.Item `json:"items"`
 }
 
+// Query returns a new request that replace the internal query with the
+// specified value.
+func (req DataFrameRequest) Query(q query.Query) DataFrameRequest {
+	req.parent = req.parent.Query(q)
+	return req
+}
+
 // Filter returns a new request that includes Items matching the provided
 // filter.
 func (req DataFrameRequest) Filter(filter query.FilterType) DataFrameRequest {
