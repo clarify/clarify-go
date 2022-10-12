@@ -56,22 +56,22 @@ func (cmp Comparison) String() string {
 // for the result. Operators are resolved based on operator keys, where some
 // initializers have an overlap:
 //
-//    - Equal and In both users $in.
-//    - NotEqual and NotIn both users $nin.
-//    - Range and GreaterThanOrEqual both uses $gte.
-//    - Range and LessThan both uses $lt.
+//   - Equal and In both users $in.
+//   - NotEqual and NotIn both users $nin.
+//   - Range and GreaterThanOrEqual both uses $gte.
+//   - Range and LessThan both uses $lt.
 //
 // Example valid usage:
 //
-//    MultiOperator(Equal(nil), LessThan(49))        // {"$in":[nil],"$lt":49}
-//    MultiOperator(GreaterOrEqual(0), LessThan(49)) // {"$gte":0,"$lt":49}
+//	MultiOperator(Equal(nil), LessThan(49))        // {"$in":[nil],"$lt":49}
+//	MultiOperator(GreaterOrEqual(0), LessThan(49)) // {"$gte":0,"$lt":49}
 //
 // Example of conflicting operators:
 //
-//    MultiOperator(Equal(0), In(1, 2))       // {"$in":[1,2]}
-//    MultiOperator(In(1, 2), Equal(nil))     // null
-//    MultiOperator(NotIn(1, 2), NotEqual(0)) // {"$nin":[0]}
-//    MultiOperator(NotEqual(0), NotIn(1, 2)) // {"$nin":[1,2]}
+//	MultiOperator(Equal(0), In(1, 2))       // {"$in":[1,2]}
+//	MultiOperator(In(1, 2), Equal(nil))     // null
+//	MultiOperator(NotIn(1, 2), NotEqual(0)) // {"$nin":[0]}
+//	MultiOperator(NotEqual(0), NotIn(1, 2)) // {"$nin":[1,2]}
 func MultiOperator(cmps ...Comparison) Comparison {
 	var target opComparison
 	for _, cmp := range cmps {
@@ -219,7 +219,7 @@ func LessOrEqual(lte any) Comparison {
 
 // Range is a short-hand for:
 //
-//     MergeComparisons(GreaterThanOrEqual(gte), LessThan(lt))
+//	MergeComparisons(GreaterThanOrEqual(gte), LessThan(lt))
 func Range(gte, lt any) Comparison {
 	return Comparison{
 		value: &opComparison{
