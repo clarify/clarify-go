@@ -21,11 +21,26 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
 const headerAPIVersion = "X-API-Version"
 const defaultAPIVersion = "1.0"
+
+var userAgent = "clarify-go/unknown"
+
+func init() {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == "github.com/clarify/clarify-go" {
+			userAgent = "clarify-go/" + dep.Version
+		}
+	}
+}
 
 // Handler describe the interface for handling arbitrary RPC requests.
 type Handler interface {
@@ -69,6 +84,7 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 
 	httpReq.Header.Set(headerAPIVersion, req.APIVersion)
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("User-Agent", userAgent)
 	httpResp, err := c.Client.Do(httpReq)
 	if err != nil {
 		return err
