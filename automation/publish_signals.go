@@ -132,9 +132,11 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 	// We iterate signals without requesting the total count. This is an
 	// optimization bet that total % limit == 0 is uncommon.
 	q := query.Query{
-		Filter: p.SignalsFilter.Filter(),
-		Sort:   []string{"id"},
-		Limit:  selectSignalsPageSize,
+		Sort:  []string{"id"},
+		Limit: selectSignalsPageSize,
+	}
+	if p.SignalsFilter != nil {
+		q.Filter = p.SignalsFilter.Filter()
 	}
 
 	items := make(map[string]views.ItemSave)
