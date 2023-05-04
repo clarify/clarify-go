@@ -11,36 +11,19 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
-        id: go
-
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Setup Go modules cache
-        id: cache-go-module
-        uses: actions/cache@v3
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          fetch-depth: 0 # Required for go-header check.
 
-      - name: Setup Go build cache
-        id: cache-go-build
-        uses: actions/cache@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          path: ~/.cache/go-build
-          key: ${{ runner.os }}-gobuild-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-gobuild-
-
-      - name: Download dependencies
-        if: steps.cache-go-module.outputs.cache-hit != 'true'
-        run: go mod download
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            examples/devdata_cli/go.sum
+        id: go
 
       - name: Verify go modules up to date
         run: |
@@ -48,18 +31,17 @@ jobs:
           go mod tidy
           [ -z "$(git diff -- go.{mod,sum})" ] # Check there are no changes!
 
-      - name: Test
+      - name: Test (main module)
         run: go test -race ./...
 
-      # Run golangci-lint in same job as tests as the golangci-lint task can not
-      # resolve private dependencies.
-      - name: golangci-lint
+      - name: Lint (main module)
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.50
+          version: v1.52
           github-token: ${{ secrets.GITHUB_TOKEN }}
           only-new-issues: false
-          skip-cache: false
-          skip-pkg-cache: true
-          skip-build-cache: true
+          skip-cache: true
           args: --timeout=10m
+
+      - name: Test example/devdata_cli (sub module)
+        run: cd ./examples/devdata_cli && go test -race ./...
