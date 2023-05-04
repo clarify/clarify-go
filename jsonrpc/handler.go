@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 const headerAPIVersion = "X-API-Version"
@@ -56,7 +59,7 @@ type HTTPHandler struct {
 
 // Do sends the passed in request to the server, and decodes the result or error
 // from the response. Result must be a pointer.
-func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
+func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) (retErr error) {
 	var trace string
 	var err error
 	if c.RequestLogger != nil {
@@ -80,17 +83,28 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrBadRequest, err)
 	}
-	defer appendOnError(&err, httpReq.Body.Close, "; ")
+	defer appendOnError(&retErr, httpReq.Body.Close, "; ")
 
 	httpReq.Header.Set(headerAPIVersion, req.APIVersion)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("User-Agent", userAgent)
 	httpResp, err := c.Client.Do(httpReq)
-	if err != nil {
+
+	var authErr *oauth2.RetrieveError
+	switch {
+	case errors.As(err, &authErr):
+		trace = authErr.Response.Header.Get("traceparent")
+		return HTTPError{
+			StatusCode: authErr.Response.StatusCode,
+			Headers:    authErr.Response.Header,
+			Body:       string(authErr.Body),
+		}
+	case err != nil:
 		return err
 	}
-	defer appendOnError(&err, httpResp.Body.Close, "; ")
+
 	trace = httpResp.Header.Get("traceparent")
+	defer appendOnError(&retErr, httpResp.Body.Close, "; ")
 
 	if httpResp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(httpResp.Body)
@@ -114,11 +128,11 @@ func (c *HTTPHandler) Do(ctx context.Context, req Request, result any) error {
 	}
 	if resp.JSONRPC != "2.0" {
 		data := buf.Bytes()
-		return fmt.Errorf(`%w: jsonrpc must be "2.0" (trace: %s, body: %s)`, ErrBadResponse, trace, data)
+		return fmt.Errorf(`%w: jsonrpc must be "2.0" (traceparent: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
 	if resp.ID != req.ID {
 		data := buf.Bytes()
-		return fmt.Errorf(`%w: id must match request (trace: %s, body: %s)`, ErrBadResponse, trace, data)
+		return fmt.Errorf(`%w: id must match request (traceparent: %s, body: %s)`, ErrBadResponse, trace, data)
 	}
 	if err := resp.Error; err != nil {
 		return err
