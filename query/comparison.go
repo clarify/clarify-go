@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,7 +181,7 @@ func NotIn[E any](elements ...E) Comparison {
 		nin = append(nin, simpleJSON(elem))
 	}
 	return Comparison{
-		value: &opComparison{In: nin},
+		value: &opComparison{NotIn: nin},
 	}
 }
 
