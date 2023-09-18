@@ -41,7 +41,7 @@ To quickly set-up your own automation routines, you can get started with our [au
 
 ## Copyright
 
-Copyright 2022 Searis AS
+Copyright 2022-2023 Searis AS
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use the content in this repo except in compliance with the License.
