@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ func (l *Labels) Add(key string, value string) {
 
 	slices.Sort(ll)
 	if i, found := slices.BinarySearch(ll, value); !found {
-		slices.Insert(ll, i, value)
+		ll = slices.Insert(ll, i, value)
 	}
 
 	(*l)[key] = ll
@@ -137,7 +137,7 @@ func (l *Labels) Remove(key string, value string) {
 	}
 	slices.Sort((*l)[key])
 	if i, found := slices.BinarySearch(ll, value); !found {
-		slices.Delete(ll, i, i+1)
+		ll = slices.Delete(ll, i, i+1)
 	}
 	if len(ll) == 0 {
 		delete((*l), key)
