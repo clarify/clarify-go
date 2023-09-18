@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ package views
 import (
 	"encoding/json"
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/clarify/clarify-go/fields"
-	"golang.org/x/exp/slices"
 )
 
 var (

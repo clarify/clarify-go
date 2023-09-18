@@ -23,6 +23,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,8 +35,6 @@ import (
 	"github.com/clarify/clarify-go/views"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -618,7 +617,10 @@ func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
 		return err
 	}
 
-	keys := maps.Keys(result.Data)
+	keys := make([]string, 0, len(result.Data))
+	for k := range result.Data {
+		keys = append(keys, k)
+	}
 	slices.Sort(keys)
 	var i, samples int
 	for _, k := range keys {
