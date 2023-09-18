@@ -37,7 +37,7 @@ jobs:
       - name: Lint (main module)
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.52
+          version: v1.54
           github-token: ${{ secrets.GITHUB_TOKEN }}
           only-new-issues: false
           skip-cache: true
