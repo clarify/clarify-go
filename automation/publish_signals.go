@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	"github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/query"
 	"github.com/clarify/clarify-go/views"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -162,7 +161,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 		}
 
 		total += len(items)
-		maps.Clear(items)
+		items = make(map[string]views.ItemSave)
 		return nil
 	}
 

@@ -16,9 +16,8 @@ package fields
 
 import (
 	"encoding/json"
-
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
+	"maps"
+	"slices"
 )
 
 // EnumValues maps integer Items values to strings.
