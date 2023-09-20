@@ -1,7 +1,10 @@
 {
   "meta": {
     "total": 2,
-    "groupIncludedByType": true
+    "format": {
+      "groupIncludedByType": true,
+      "dataAsArray": true
+    }
   },
   "data": {
     "times": [

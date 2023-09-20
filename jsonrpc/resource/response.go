@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,13 @@ type Selection[E, I any] struct {
 // SelectionMeta contains top-level meta information about a resource
 // selection.
 type SelectionMeta struct {
-	Total               int  `json:"total"`
+	Total  int             `json:"total"`
+	Format SelectionFormat `json:"format"`
+}
+
+// SelectionFormat contains configuration for how a resource selection is
+// formatted.
+type SelectionFormat struct {
+	DataAsArray         bool `json:"dataAsArray"`
 	GroupIncludedByType bool `json:"groupIncludedByType"`
 }

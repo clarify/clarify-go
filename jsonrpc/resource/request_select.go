@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	paramQuery               jsonrpc.ParamName = "query"
-	paramInclude             jsonrpc.ParamName = "include"
-	paramGroupIncludedByType jsonrpc.ParamName = "groupIncludedByType"
+	paramQuery   jsonrpc.ParamName = "query"
+	paramInclude jsonrpc.ParamName = "include"
+	paramFormat  jsonrpc.ParamName = "format"
 )
 
 type SelectMethod[R any] struct {
@@ -112,7 +112,10 @@ func (req SelectRequest[R]) Do(ctx context.Context, extraParams ...jsonrpc.Param
 	params = append(params,
 		paramQuery.Value(req.query),
 		paramInclude.Value(req.includes),
-		paramGroupIncludedByType.Value(true),
+		paramFormat.Value(SelectionFormat{
+			DataAsArray:         true,
+			GroupIncludedByType: true,
+		}),
 	)
 	params = append(params, extraParams...)
 

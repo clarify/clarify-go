@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ type InsertResult struct {
 }
 
 var methodInsert = resource.Method[InsertResult]{
-	APIVersion: "1.0",
+	APIVersion: "1.1rc1",
 	Method:     "integration.insert",
 }
 
@@ -68,8 +68,7 @@ type SaveSignalsResult struct {
 }
 
 var methodSaveSignals = resource.SaveMethod[map[string]views.SignalSave, SaveSignalsResult]{
-	//APIVersion: "1.0",
-	APIVersion: "1.1beta2",
+	APIVersion: "1.1rc1",
 	Method:     "integration.saveSignals",
 	DataParam:  "inputs",
 }
@@ -89,7 +88,7 @@ type PublishSignalsResult struct {
 }
 
 var methodPublishSignals = resource.SaveMethod[map[string]views.ItemSave, PublishSignalsResult]{
-	APIVersion: "1.1beta2",
+	APIVersion: "1.1rc1",
 	Method:     "admin.publishSignals",
 	DataParam:  "itemsBySignal",
 }
@@ -107,7 +106,7 @@ func (c *Client) SelectSignals(integration string) resource.SelectRequest[Select
 type SelectSignalsResult = resource.Selection[views.Signal, views.SignalInclude]
 
 var methodSelectSignals = resource.SelectMethod[SelectSignalsResult]{
-	APIVersion: "1.1beta2",
+	APIVersion: "1.1rc1",
 	Method:     "admin.selectSignals",
 }
 
@@ -124,7 +123,7 @@ func (c *Client) SelectItems() resource.SelectRequest[SelectItemsResult] {
 type SelectItemsResult = resource.Selection[views.Item, views.ItemInclude]
 
 var methodSelectItems = resource.SelectMethod[SelectItemsResult]{
-	APIVersion: "1.1beta2",
+	APIVersion: "1.1rc1",
 	Method:     "clarify.selectItems",
 }
 
@@ -141,6 +140,6 @@ func (c *Client) DataFrame() DataFrameRequest {
 }
 
 var methodDataFrame = resource.SelectMethod[DataFrameResult]{
-	APIVersion: "1.1beta2",
+	APIVersion: "1.1rc1",
 	Method:     "clarify.dataFrame",
 }
