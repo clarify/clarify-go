@@ -1,9 +1,9 @@
 module github.com/clarify/clarify-go/devdata_cli
 
-go 1.20
+go 1.21
 
 require (
-	github.com/clarify/clarify-go v0.2.4
+	github.com/clarify/clarify-go v0.2.5
 	github.com/peterbourgon/ff/v3 v3.4.0
 )
 
@@ -15,4 +15,4 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 )
 
-replace github.com/clarify/clarify-go v0.2.2 => ../../
+replace github.com/clarify/clarify-go v0.2.5 => ../../
