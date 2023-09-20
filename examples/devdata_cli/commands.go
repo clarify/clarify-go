@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -117,7 +118,11 @@ func (p *program) init(ctx context.Context) {
 	}
 	if p.logRequests {
 		h.RequestLogger = func(req jsonrpc.Request, trace string, latency time.Duration, err error) {
-			log.Printf("JSONRPC request: %s, trace: %s, latency: %s, error: %v", req.Method, trace, latency, err)
+			var b bytes.Buffer
+			enc := json.NewEncoder(&b)
+			enc.SetIndent("", "  ")
+			enc.Encode(req)
+			log.Printf("JSONRPC request - trace: %s, latency: %s, error: %v request body:\n%s", trace, latency, err, b.String())
 		}
 	}
 	if p.logOnly {
@@ -585,7 +590,7 @@ func (p *program) dataFrameCommand() *ffcli.Command {
 }
 
 func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
-	req := p.client.DataFrame().Include("item").Skip(config.skip).Limit(config.limit).TimeRange(config.startTime, config.endTime)
+	req := p.client.DataFrame().Skip(config.skip).Limit(config.limit).TimeRange(config.startTime, config.endTime)
 	expectSeriesPerItem := 1
 	switch {
 	case config.rollupWindow:
