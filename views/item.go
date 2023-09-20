@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,4 +75,8 @@ type ItemSaveAttributes struct {
 }
 
 // ItemRelationships describe the item relationships that's exposed by the API.
-type ItemRelationships struct{}
+type ItemRelationships struct {
+	CreatedBy    resource.ToOne `json:"createdBy"`
+	UpdatedBy    resource.ToOne `json:"updatedBy"`
+	Organization resource.ToOne `json:"organization"`
+}
