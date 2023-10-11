@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ func (creds Credentials) Client(ctx context.Context) *Client {
 		h = invalidRPCHandler{err: err}
 	}
 
-	return &Client{integration: creds.Integration, h: h}
+	return &Client{ns: IntegrationNamespace{integration: creds.Integration, h: h}}
 }
 
 // HTTPHandler returns a low-level RPC handler that communicates over HTTP using

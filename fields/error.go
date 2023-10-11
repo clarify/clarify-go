@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@ package fields
 
 // Parsing errors.
 const (
-	ErrBadFixedDuration strErr = "must be RFC 3339 duration in range week to fraction"
+	ErrBadCalendarDuration strErr = "must be RFC 3339 duration in range year to fraction"
+	ErrBadFixedDuration    strErr = "must be RFC 3339 duration in range week to fraction"
 )
 
 type strErr string

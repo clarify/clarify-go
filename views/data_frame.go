@@ -31,6 +31,10 @@ var (
 	_ sort.Interface = rawDataFrame{}
 )
 
+type DataFrameInclude struct {
+	Items []Item
+}
+
 // DataSeries contain a map of timestamps in micro seconds since the epoch to
 // a floating point value.
 type DataSeries map[fields.Timestamp]float64

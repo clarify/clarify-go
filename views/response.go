@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resource
+package views
 
 // SaveSummary holds the identity of a resource, and describes weather it was
 // updated or created due to your operation.
@@ -30,9 +30,9 @@ type CreateSummary struct {
 }
 
 // Selection holds resource selection results.
-type Selection[E, I any] struct {
+type Selection[D, I any] struct {
 	Meta     SelectionMeta `json:"meta"`
-	Data     []E           `json:"data"`
+	Data     D             `json:"data"`
 	Included I             `json:"included"`
 }
 

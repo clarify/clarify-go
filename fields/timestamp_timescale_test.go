@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS, 2017-2022 Timescale, Inc.
+// Copyright 2022-2023 Searis AS, 2017-2022 Timescale, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
 
 package fields_test
 
-// timestampTimeBucket is a direct Go translation of C code from Timescale. We
-// use it as a reference check for our own implementation.
+// timestampTimeBucket is a direct Go translation of C code from Timescale (but
+// without custom origin and time-zone support). It is used as a reference check
+// for internal implementation inside Clarify.
+//
 // https://github.com/timescale/timescaledb/blob/a6b5f9002cf4f3894aa8cbced7f862a73784cada/src/time_bucket.c#L18
 func timescaleTimeBucket(period, timestamp, offset, min, max int64) int64 {
 	if period <= 0 {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package query
+package params
 
 import (
 	"bytes"
@@ -21,13 +21,23 @@ import (
 	"strings"
 )
 
-// Comparisons maps field paths joined by dot to a comparison.
 type Comparisons map[string]Comparison
 
-var _ FilterType = Comparisons{}
+var (
+	_ interface {
+		ResourceFilterType
+	} = Comparisons{}
+)
 
-func (paths Comparisons) Filter() Filter {
-	return Filter{Paths: paths}
+// CompareField returns a new filter comparing a single field path.
+func CompareField(path string, cmp Comparison) Comparisons {
+	return Comparisons{path: cmp}
+}
+
+func (c Comparisons) filter() ResourceFilter {
+	return ResourceFilter{
+		paths: c,
+	}
 }
 
 // Comparison allows comparing a particular value with one or more operators.
@@ -49,30 +59,30 @@ func (cmp Comparison) String() string {
 	return string(b)
 }
 
-// MultiOperator merges multiple comparisons with different operators together
+// MergeOperators merges multiple comparisons with different operators together
 // to a single comparison entry.
 //
 // When conflicting operators ar encountered, the right most value is selected
-// for the result. Operators are resolved based on operator keys, where some
-// initializers have an overlap:
+// for the result. MergeOperators are resolved based on operator keys, where
+// some initializers have an overlap:
 //
-//   - Equal and In both users $in.
-//   - NotEqual and NotIn both users $nin.
+//   - Equal and In both uses $in.
+//   - NotEqual and NotIn both uses $nin.
 //   - Range and GreaterThanOrEqual both uses $gte.
 //   - Range and LessThan both uses $lt.
 //
 // Example valid usage:
 //
-//	MultiOperator(Equal(nil), LessThan(49))        // {"$in":[nil],"$lt":49}
-//	MultiOperator(GreaterOrEqual(0), LessThan(49)) // {"$gte":0,"$lt":49}
+//	MergeOperators(Equal(nil), LessThan(49))        // {"$in":[nil],"$lt":49}
+//	MergeOperators(GreaterOrEqual(0), LessThan(49)) // {"$gte":0,"$lt":49}
 //
 // Example of conflicting operators:
 //
-//	MultiOperator(Equal(0), In(1, 2))       // {"$in":[1,2]}
-//	MultiOperator(In(1, 2), Equal(nil))     // null
-//	MultiOperator(NotIn(1, 2), NotEqual(0)) // {"$nin":[0]}
-//	MultiOperator(NotEqual(0), NotIn(1, 2)) // {"$nin":[1,2]}
-func MultiOperator(cmps ...Comparison) Comparison {
+//	MergeOperators(Equal(0), In(1, 2))       // {"$in":[1,2]}
+//	MergeOperators(In(1, 2), Equal(nil))     // null
+//	MergeOperators(NotIn(1, 2), NotEqual(0)) // {"$nin":[0]}
+//	MergeOperators(NotEqual(0), NotIn(1, 2)) // {"$nin":[1,2]}
+func MergeOperators(cmps ...Comparison) Comparison {
 	var target opComparison
 	for _, cmp := range cmps {
 		v := cmp.value
@@ -143,7 +153,7 @@ func (cmp *opComparison) normalize() *opComparison {
 }
 
 // Equal returns a comparison that match values equal to v. Panics if v is not
-// JSON marshalable into a simple JSON type (string, number, bool or null).
+// JSON marshalled into a simple JSON type (string, number, bool or null).
 func Equal(v any) Comparison {
 	return Comparison{
 		value: (&opComparison{In: []json.RawMessage{simpleJSON(v)}}).normalize(),
@@ -151,7 +161,7 @@ func Equal(v any) Comparison {
 }
 
 // NotEqual returns a comparison that match values not equal to v. Panics if v
-// is not JSON marshalable into a simple JSON type (string, number, bool or
+// is not JSON marshalled into a simple JSON type (string, number, bool or
 // null).
 func NotEqual(v any) Comparison {
 	return Comparison{
@@ -160,7 +170,7 @@ func NotEqual(v any) Comparison {
 }
 
 // In returns a comparison that match values in elements. Panics if any element
-// is not JSON marshalable into an a simple JSON type (string, number, bool or
+// is not JSON marshalled into an a simple JSON type (string, number, bool or
 // null).
 func In[E any](elements ...E) Comparison {
 	in := make([]json.RawMessage, 0, len(elements))
@@ -173,7 +183,7 @@ func In[E any](elements ...E) Comparison {
 }
 
 // NotIn returns a comparison that match values not in elements. Panics if any
-// element is not JSON marshalable into an a simple JSON type (string, number,
+// element is not JSON marshalled into an a simple JSON type (string, number,
 // bool or null).
 func NotIn[E any](elements ...E) Comparison {
 	nin := make([]json.RawMessage, 0, len(elements))
@@ -186,7 +196,7 @@ func NotIn[E any](elements ...E) Comparison {
 }
 
 // Greater returns a comparison that matches values > gte. Panics if gt is not
-// JSON marshalable into an a sortable JSON type (string or number).
+// JSON marshalled into an a sortable JSON type (string or number).
 func Greater(gt any) Comparison {
 	return Comparison{
 		value: &opComparison{Greater: orderedJSONType(gt)},
@@ -194,7 +204,7 @@ func Greater(gt any) Comparison {
 }
 
 // GreaterOrEqual returns a comparison that matches values >= gte. Panics if gte
-// is not JSON marshalable into an a sortable JSON type (string or number).
+// is not JSON marshalled into an a sortable JSON type (string or number).
 func GreaterOrEqual(gte any) Comparison {
 	return Comparison{
 		value: &opComparison{GreaterOrEqual: orderedJSONType(gte)},
@@ -202,7 +212,7 @@ func GreaterOrEqual(gte any) Comparison {
 }
 
 // Less returns a comparison that matches values < lt. Panics if lt is not JSON
-// marshalable into an a sortable JSON type (string or number).
+// marshalled into an a sortable JSON type (string or number).
 func Less(lt any) Comparison {
 	return Comparison{
 		value: &opComparison{Less: orderedJSONType(lt)},
@@ -210,7 +220,7 @@ func Less(lt any) Comparison {
 }
 
 // LessOrEqual returns a comparison that matches values <= lte. Panics if lte is
-// not JSON marshalable into an a sortable JSON type (string or number).
+// not JSON marshalled into an a sortable JSON type (string or number).
 func LessOrEqual(lte any) Comparison {
 	return Comparison{
 		value: &opComparison{LessOrEqual: orderedJSONType(lte)},

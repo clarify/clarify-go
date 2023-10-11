@@ -12,7 +12,7 @@ This SDK is following [Semantic Versioning][semver]. The SDK is currently in a v
 
 ## Features
 
-This SDK is currently written for [Clarify API v1.1beta2][docs-v1.1beta2], and include the following features, based on your integration access configuration:
+This SDK is currently written for [Clarify API v1.1][docs-v1.1], and include the following features, based on your integration access configuration:
 
 Always possible:
 
@@ -22,18 +22,19 @@ Always possible:
 
 When access to the Admin namespace is granted in Clarify ` (scoped to entire organization):
 
-- Read signal meta-data to Clarify with `client.SelectSignals`. Allows side-loading related items. See [examples/select_signals](examples/select_signals/).
-- Publish signals as items directly with `client.PublishSignals`, or more conveniently via the `automation` package. See [examples/publish_signals](examples/publish_signals/) for the latter.
+- Read signal meta-data to Clarify with `client.Admin().SelectSignals`. Allows side-loading related items. See [examples/select_signals](examples/select_signals/).
+- Publish signals as items directly with `client.Admin().PublishSignals`, or more conveniently via the `automation` package. See [examples/publish_signals](examples/publish_signals/) for the latter.
 
 When access to the Clarify namespace is granted in Clarify (scoped to entire organization):
 
-- Read item meta-data from Clarify via `client.SelectItems`. See [examples/select_items](examples/select_items/).
-- Read time-series data from Clarify via `client.DataFrame`. See [examples/data_frame](examples/select_items/).
+- Read item meta-data from Clarify via `client.Clarify().SelectItems`. See [examples/select_items](examples/select_items/).
+- Read time-series data from Clarify via `client.Clarify().DataFrame`. See [examples/data_frame](examples/select_items/).
+- Do calculations with data from Clarify via `client.Clarify().Evaluate`. See [examples/evaluate](examples/evaluate/).
 
 [clarify]: https://clarify.io/
 [semver]: https://semver.org/
 [docs]: https://docs.clarify.io
-[docs-v1.1beta2]: https://docs.clarify.io/1.1beta2
+[docs-v1.1]: https://docs.clarify.io/1.1
 
 ## Setting up automation routines
 

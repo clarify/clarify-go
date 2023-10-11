@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/jsonrpc"
-	"github.com/clarify/clarify-go/query"
+	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -72,6 +72,7 @@ func rootCommand() *ffcli.Command {
 			p.selectItemsCommand(),
 			p.publishSignalsCommand(),
 			p.dataFrameCommand(),
+			p.evaluateCommand(),
 		},
 	}
 }
@@ -203,7 +204,9 @@ func (p *program) insert(ctx context.Context, config insertConfig) error {
 	if config.points < 1 {
 		return fmt.Errorf("-points can not be below 1")
 	}
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(
+		rand.NewSource(time.Now().UnixNano()),
+	)
 
 	startTime := config.startTime.Truncate(config.truncate)
 	endTime := startTime.Add(config.interval * time.Duration(config.points))
@@ -230,7 +233,7 @@ func (p *program) insert(ctx context.Context, config insertConfig) error {
 				return ctx.Err()
 			default:
 			}
-			ds[fields.AsTimestamp(t)] = rand.Float64() * 100
+			ds[fields.AsTimestamp(t)] = r.Float64() * 100
 		}
 		df[k] = ds
 	}
@@ -357,20 +360,20 @@ func (p *program) selectSignals(ctx context.Context, config selectSignalsConfig)
 		config.integration = p.defaultIntegration
 	}
 
-	req := p.client.SelectSignals(config.integration).Skip(config.skip).Limit(config.limit)
-	if config.includeItem {
-		req = req.Include("item")
-	}
-	if len(config.sort) > 0 {
-		req = req.Sort(config.sort...)
-	}
+	q := params.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
 	if config.filter != "" {
-		var f query.Filter
+		var f params.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
-		req = req.Filter(f)
+		q = q.Where(f)
 	}
+
+	req := p.client.Admin().SelectSignals(config.integration, q)
+	if config.includeItem {
+		req = req.Include("item")
+	}
+
 	result, err := req.Do(ctx)
 	if err != nil {
 		return err
@@ -385,6 +388,7 @@ type publishSignalsConfig struct {
 
 	integration, filter string
 	skip, limit         int
+	sort                []string
 }
 
 func (p *program) publishSignalsCommand() *ffcli.Command {
@@ -396,6 +400,7 @@ func (p *program) publishSignalsCommand() *ffcli.Command {
 	fs.StringVar(&config.annotationTransform, "annotation-transform", defaultTransformVersion, "Value to search for in the name annotation.")
 	fs.StringVar(&config.integration, "integration", "", "Integration to publish signals from (defaults to integration from credentials file).")
 	fs.StringVar(&config.filter, "filter", "", "Resource filter (JSON) that's combined with the a forced annotations filter for publish=true.")
+	fs.Var(stringSlice{target: &config.sort}, "sort", "Comma-separated list of fields to sort the result by.")
 	fs.IntVar(&config.skip, "s", 0, "Number of signals to skip.")
 	fs.IntVar(&config.limit, "n", 100, "Maximum number of signals to publish.")
 
@@ -421,19 +426,23 @@ func (p *program) publishSignals(ctx context.Context, config publishSignalsConfi
 	keySignalAttributesHash := config.annotationPrefix + "source/signal-attributes-hash"
 	keySignalID := config.annotationPrefix + "source/signal-id"
 
-	selectReq := p.client.SelectSignals(config.integration).
+	q := params.Query().
+		Where(params.Comparisons{
+			"annotations." + keyPublish: params.Equal("true"),
+		}).
 		Skip(config.skip).
 		Limit(config.limit).
-		Filter(query.Comparisons{"annotations." + keyPublish: query.Equal("true")}).
-		Include("item")
+		Sort(config.sort...)
+
 	if config.filter != "" {
-		var f query.Filter
+		var f params.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
-		selectReq = selectReq.Filter(f)
+		q = q.Where(f)
 	}
-	selectResult, err := selectReq.Do(ctx)
+
+	selectResult, err := p.client.Admin().SelectSignals(config.integration, q).Include("item").Do(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -478,7 +487,7 @@ func (p *program) publishSignals(ctx context.Context, config publishSignalsConfi
 		return nil
 	}
 	log.Printf("Updating %d/%d items", len(newItems), len(selectResult.Data))
-	result, err := p.client.PublishSignals(config.integration, newItems).Do(ctx)
+	result, err := p.client.Admin().PublishSignals(config.integration, newItems).Do(ctx)
 	if err != nil {
 		return err
 	}
@@ -524,19 +533,15 @@ func (p *program) selectItemsCommand() *ffcli.Command {
 }
 
 func (p *program) selectItems(ctx context.Context, config selectItemsConfig) error {
-	req := p.client.SelectItems().Skip(config.skip).Limit(config.limit)
+	q := params.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
 	if config.filter != "" {
-		var f query.Filter
+		var f params.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
-		req = req.Filter(f)
+		q = q.Where(f)
 	}
-	if len(config.sort) > 0 {
-		req = req.Sort(config.sort...)
-	}
-
-	result, err := req.Do(ctx)
+	result, err := p.client.Clarify().SelectItems(q).Do(ctx)
 	if err != nil {
 		return err
 	}
@@ -546,15 +551,20 @@ func (p *program) selectItems(ctx context.Context, config selectItemsConfig) err
 }
 
 type dataFrameConfig struct {
+	// Item params.
 	skip, limit int
 	filter      string
-	includeItem bool
 	sort        []string
 
+	// Data params.
 	startTime, endTime time.Time
 	rollupDuration     time.Duration
+	rollupMonths       int
 	rollupWindow       bool
 	last               int
+
+	// Formatting.
+	includeItems bool
 }
 
 func (p *program) dataFrameCommand() *ffcli.Command {
@@ -565,16 +575,23 @@ func (p *program) dataFrameCommand() *ffcli.Command {
 	config.endTime = config.startTime.Add(24 * time.Hour)
 
 	fs := flag.NewFlagSet("devdata_cli data-frame", flag.ExitOnError)
+
+	// Item params.
 	fs.IntVar(&config.skip, "s", 0, "Number of items to skip.")
 	fs.IntVar(&config.limit, "n", 50, "Maximum number of items to return.")
-	fs.IntVar(&config.last, "last", -1, "Limit response to last N samples.")
 	fs.StringVar(&config.filter, "filter", "", "Resource filter (JSON).")
 	fs.Var(stringSlice{target: &config.sort}, "sort", "Comma-separated list of fields to sort the result by.")
-	fs.BoolVar(&config.includeItem, "include-item", false, "Include related items.")
+
+	// Data params.
 	fs.Var(timeFlag{target: &config.startTime}, "start-time", "RFC 3339 timestamp of first data-point to include.")
 	fs.Var(timeFlag{target: &config.endTime}, "end-time", "RFC 3339 timestamp of first data-point not to include.")
 	fs.BoolVar(&config.rollupWindow, "rollup-window", false, "Use window rollup.")
-	fs.DurationVar(&config.rollupDuration, "rollup-duration", 0, "Set to positive duration to enable time-bucket rollup.")
+	fs.DurationVar(&config.rollupDuration, "rollup-duration", 0, "Set to positive duration to use duration bucket rollup.")
+	fs.IntVar(&config.rollupMonths, "rollup-months", 0, "Set to positive value to use month bucket rollup.")
+	fs.IntVar(&config.last, "last", -1, "Limit response to last N samples.")
+
+	// Formatting.
+	fs.BoolVar(&config.includeItems, "include-items", false, "Include related items.")
 
 	return &ffcli.Command{
 		Name:       "data-frame",
@@ -590,33 +607,38 @@ func (p *program) dataFrameCommand() *ffcli.Command {
 }
 
 func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
-	req := p.client.DataFrame().Skip(config.skip).Limit(config.limit).TimeRange(config.startTime, config.endTime)
-	expectSeriesPerItem := 1
-	switch {
-	case config.rollupWindow:
-		expectSeriesPerItem = 5
-		req = req.RollupWindow()
-	case config.rollupDuration > 0:
-		expectSeriesPerItem = 5
-		req = req.RollupBucket(config.rollupDuration)
-	}
-	if config.last > 0 {
-		req = req.Last(config.last)
-	}
-	if config.includeItem {
-		req = req.Include("item")
-	}
+	query := params.Query().
+		Skip(config.skip).
+		Limit(config.limit).
+		Sort(config.sort...)
+
 	if config.filter != "" {
-		var f query.Filter
+		var f params.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
-		req = req.Filter(f)
-	}
-	if len(config.sort) > 0 {
-		req = req.Sort(config.sort...)
+		query = query.Where(f)
 	}
 
+	data := params.Data().
+		Where(params.TimeRange(config.startTime, config.endTime))
+
+	switch {
+	case config.rollupWindow:
+		data = data.RollupWindow()
+	case config.rollupMonths > 0:
+		data = data.RollupMonths(config.rollupMonths)
+	case config.rollupDuration > 0:
+		data = data.RollupDuration(config.rollupDuration, time.Monday)
+	}
+	if config.last > 0 {
+		data = data.Last(config.last)
+	}
+
+	req := p.client.Clarify().DataFrame(query, data)
+	if config.includeItems {
+		req = req.Include("items")
+	}
 	result, err := req.Do(ctx)
 	if err != nil {
 		return err
@@ -629,11 +651,10 @@ func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
 	slices.Sort(keys)
 	var i, samples int
 	for _, k := range keys {
-
 		data := result.Data[k]
 		samples += len(data)
 
-		if config.includeItem {
+		if config.includeItems {
 			id, _, _ := strings.Cut(k, "_")
 			for id != result.Included.Items[i].ID {
 				i++
@@ -644,11 +665,110 @@ func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
 		}
 	}
 
-	if config.includeItem {
-		missing := len(result.Included.Items)*expectSeriesPerItem - len(result.Data)
-		log.Printf("Data frame summary: len(result.data): %d, len(result.included.items): %d, total samples: %d, missing series: %d", len(result.Data), len(result.Included.Items), samples, missing)
-	} else {
-		log.Printf("Data frame summary: len(result.data): %d, len(result.included.items): %d, total samples: %d", len(result.Data), len(result.Included.Items), samples)
+	log.Printf("Data frame summary: len(result.data): %d, len(result.included.items): %d, total samples: %d", len(result.Data), len(result.Included.Items), samples)
+	return p.EncodeJSON(result)
+}
+
+type evaluateConfig struct {
+	// Items.
+	items        string
+	calculations string
+
+	// Data params.
+	startTime, endTime time.Time
+	rollupDuration     time.Duration
+	rollupMonths       int
+	rollupWindow       bool
+	last               int
+
+	// Formatting.
+	includeItems bool
+}
+
+func (p *program) evaluateCommand() *ffcli.Command {
+	var config evaluateConfig
+
+	// Set default-times.
+	config.startTime = time.Now().Truncate(24 * time.Hour)
+	config.endTime = config.startTime.Add(24 * time.Hour)
+
+	fs := flag.NewFlagSet("devdata_cli evaluate", flag.ExitOnError)
+
+	// Items.
+	fs.StringVar(&config.items, "items", "[]", "Items (JSON array).")
+	fs.StringVar(&config.calculations, "calculations", "[]", "Calculations (JSON array).")
+
+	// Data params.
+	fs.Var(timeFlag{target: &config.startTime}, "start-time", "RFC 3339 timestamp of first data-point to include.")
+	fs.Var(timeFlag{target: &config.endTime}, "end-time", "RFC 3339 timestamp of first data-point not to include.")
+	fs.BoolVar(&config.rollupWindow, "rollup-window", false, "Use window rollup.")
+	fs.DurationVar(&config.rollupDuration, "rollup-duration", 0, "Set to positive duration to use duration bucket rollup.")
+	fs.IntVar(&config.rollupMonths, "rollup-months", 0, "Set to positive value to use month bucket rollup.")
+	fs.IntVar(&config.last, "last", -1, "Limit response to last N samples.")
+
+	// Formatting.
+	fs.BoolVar(&config.includeItems, "include-items", false, "Include related items.")
+
+	return &ffcli.Command{
+		Name:       "evaluate",
+		ShortUsage: "devdata_cli evaluate [flags]",
+		ShortHelp:  "Return a data frame with aggregated data.",
+		FlagSet:    fs,
+		Exec: func(ctx context.Context, args []string) error {
+			p.init(ctx)
+
+			return p.evaluate(ctx, config)
+		},
 	}
+}
+
+func (p *program) evaluate(ctx context.Context, config evaluateConfig) error {
+	var items []params.ItemAggregation
+	if err := json.Unmarshal([]byte(config.items), &items); err != nil {
+		return fmt.Errorf("-items: %w", err)
+	}
+	var calculations []params.Calculation
+	if err := json.Unmarshal([]byte(config.calculations), &calculations); err != nil {
+		return fmt.Errorf("-calculations: %w", err)
+	}
+
+	data := params.Data().
+		Where(params.TimeRange(config.startTime, config.endTime))
+
+	switch {
+	case config.rollupWindow:
+		data = data.RollupWindow()
+	case config.rollupMonths > 0:
+		data = data.RollupMonths(config.rollupMonths)
+	case config.rollupDuration > 0:
+		data = data.RollupDuration(config.rollupDuration, time.Monday)
+	}
+	if config.last > 0 {
+		data = data.Last(config.last)
+	}
+
+	req := p.client.Clarify().Evaluate(items, calculations, data)
+	if config.includeItems {
+		req = req.Include("items")
+	}
+	result, err := req.Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	keys := make([]string, 0, len(result.Data))
+	for k := range result.Data {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	var samples int
+	for _, k := range keys {
+		data := result.Data[k]
+		samples += len(data)
+
+		log.Printf("len(result.data['%s']): %d\n", k, len(data))
+	}
+
+	log.Printf("Data frame summary: len(result.data): %d, len(result.included.items): %d, total samples: %d", len(result.Data), len(result.Included.Items), samples)
 	return p.EncodeJSON(result)
 }

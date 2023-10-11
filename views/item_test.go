@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/clarify/clarify-go/jsonrpc/resource"
 	"github.com/clarify/clarify-go/views"
 )
 
@@ -28,11 +27,11 @@ func TestItemSelectMarshalJSON(t *testing.T) {
 	now := time.Now()
 	expectSHA1 := "cc65e86b937c9d743a2b004b4f5de9ccde46bfc8"
 	item := views.Item{
-		Identifier: resource.Identifier{
+		Identifier: views.Identifier{
 			Type: "items",
 			ID:   itemID,
 		},
-		Meta: resource.Meta{
+		Meta: views.Meta{
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
@@ -47,7 +46,7 @@ func TestItemSelectMarshalJSON(t *testing.T) {
 		t.Errorf("json.Marshal returns an error: %v", err)
 	}
 	var check struct {
-		Meta resource.Meta
+		Meta views.Meta
 	}
 	if err := json.Unmarshal(data, &check); err != nil {
 		t.Errorf("json.Unmarshal returns an error: %v", err)

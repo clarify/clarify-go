@@ -15,131 +15,267 @@
 package clarify
 
 import (
+	"github.com/clarify/clarify-go/internal/request"
 	"github.com/clarify/clarify-go/jsonrpc"
-	"github.com/clarify/clarify-go/jsonrpc/resource"
+	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 )
 
 const (
-	paramIntegration jsonrpc.ParamName = "integration"
-	paramData        jsonrpc.ParamName = "data"
+	apiVersion                            = "1.1"
+	paramIntegration    jsonrpc.ParamName = "integration"
+	paramData           jsonrpc.ParamName = "data"
+	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
+	paramItemsBySignal  jsonrpc.ParamName = "itemsBySignal"
+	paramQuery          jsonrpc.ParamName = "query"
+	paramItems          jsonrpc.ParamName = "items"
+	paramCalculations   jsonrpc.ParamName = "calculations"
+	paramFormat         jsonrpc.ParamName = "format"
 )
 
 // Client allows calling JSON RPC methods against Clarify.
 type Client struct {
-	integration string
-
-	h jsonrpc.Handler
+	ns IntegrationNamespace
 }
 
 // NewClient can be used to initialize an integration client from a
 // jsonrpc.Handler implementation.
 func NewClient(integration string, h jsonrpc.Handler) *Client {
-	return &Client{integration: integration, h: h}
+	return &Client{ns: IntegrationNamespace{integration: integration, h: h}}
 }
 
-// Insert returns a new insert request that can be executed at will. Requires
-// access to the integration namespace. Will insert the data to the integration
-// set in c.
-func (c *Client) Insert(data views.DataFrame) resource.Request[InsertResult] {
-	return methodInsert.NewRequest(c.h, paramIntegration.Value(c.integration), paramData.Value(data))
+// Insert returns a new request for inserting data to clarify. When referencing
+// input IDs that don't exist for the current integration, new signals are
+// created automatically on demand.
+//
+// c.Insert(data) is a short-hand for c.Integration().Insert(data).
+func (c Client) Insert(data views.DataFrame) InsertRequest {
+	return c.ns.Insert(data)
 }
+
+// SaveSignals returns a new request for updating signal meta-data in Clarify.
+// When referencing input IDs that don't exist for the current integration, new
+// signals are created automatically on demand.
+//
+// c.SaveSignals(inputs) si a short-hand for:
+//
+//	c.Integration().SaveSignals(inputs)
+func (c Client) SaveSignals(inputs map[string]views.SignalSave) SaveSignalRequest {
+	return c.ns.SaveSignals(inputs)
+}
+
+// Integration return a handler for initializing methods that require access to
+// the integration namespace.
+//
+// All integrations got access to the integration namespace.
+func (c Client) Integration() IntegrationNamespace {
+	return c.ns
+}
+
+// Admin return a handler for initializing methods that require access to the
+// admin namespace.
+//
+// Access to the admin namespace must be explicitly granted per integration in
+// the Clarify admin panel. Do not grant excessive permissions.
+func (c Client) Admin() AdminNamespace {
+	return AdminNamespace{h: c.ns.h}
+}
+
+// Clarify return a handler for initializing methods that require access to
+// the clarify namespace.
+//
+// Access to the clarify namespace must be explicitly granted per integration in
+// the Clarify admin panel.  Do not grant excessive permissions.
+func (c Client) Clarify() ClarifyNamespace {
+	return ClarifyNamespace{h: c.ns.h}
+}
+
+type IntegrationNamespace struct {
+	integration string
+
+	h jsonrpc.Handler
+}
+
+// Insert returns a new request for inserting data to clarify. When referencing
+// input IDs that don't exist for the current integration, new signals are
+// created automatically on demand.
+func (ns IntegrationNamespace) Insert(data views.DataFrame) InsertRequest {
+	return methodInsert.NewRequest(ns.h, paramIntegration.Value(ns.integration), paramData.Value(data))
+}
+
+type InsertRequest = request.Request[InsertResult]
 
 // InsertResult holds the result of an Insert operation.
 type InsertResult struct {
-	SignalsByInput map[string]resource.CreateSummary `json:"signalsByInput"`
+	SignalsByInput map[string]views.CreateSummary `json:"signalsByInput"`
 }
 
-var methodInsert = resource.Method[InsertResult]{
-	APIVersion: "1.1rc1",
+var methodInsert = request.Method[InsertResult]{
+	APIVersion: apiVersion,
 	Method:     "integration.insert",
 }
 
-// SaveSignals returns a new save signals request that can be modified though a
-// chainable API before it's executed. Keys in inputs are scoped to the current
-// integration. Requires access to the integration namespace.
-func (c *Client) SaveSignals(inputs map[string]views.SignalSave) resource.SaveRequest[map[string]views.SignalSave, SaveSignalsResult] {
-	return methodSaveSignals.NewRequest(c.h, inputs, paramIntegration.Value(c.integration))
+// SaveSignals returns a new request for updating signal meta-data in Clarify.
+// When referencing input IDs that don't exist for the current integration, new
+// signals are created automatically on demand.
+func (ns IntegrationNamespace) SaveSignals(inputs map[string]views.SignalSave) SaveSignalRequest {
+	return methodSaveSignals.NewRequest(ns.h,
+		paramIntegration.Value(ns.integration),
+		paramSignalsByInput.Value(inputs),
+	)
 }
 
-// SaveSignalsResults holds the result of a SaveSignals operation.
-type SaveSignalsResult struct {
-	SignalsByInput map[string]resource.SaveSummary `json:"signalsByInput"`
-}
+type (
+	// SaveSignalRequest describe an initialized integration.saveSignals RPC
+	// request with access to a request handler.
+	SaveSignalRequest = request.Request[SaveSignalsResult]
 
-var methodSaveSignals = resource.SaveMethod[map[string]views.SignalSave, SaveSignalsResult]{
-	APIVersion: "1.1rc1",
+	// SaveSignalsResults describe the result format for a SaveSignalRequest.
+	SaveSignalsResult struct {
+		SignalsByInput map[string]views.SaveSummary `json:"signalsByInput"`
+	}
+)
+
+var methodSaveSignals = request.Method[SaveSignalsResult]{
+	APIVersion: apiVersion,
 	Method:     "integration.saveSignals",
-	DataParam:  "inputs",
 }
 
-// PublishSignals returns a new request for publishing signals as Items.
-// Requires access to the admin namespace.
-//
-// Disclaimer: this method is based on a pre-release of the Clarify API, and
-// might be unstable or stop working.
-func (c *Client) PublishSignals(integration string, itemsBySignal map[string]views.ItemSave) resource.SaveRequest[map[string]views.ItemSave, PublishSignalsResult] {
-	return methodPublishSignals.NewRequest(c.h, itemsBySignal, paramIntegration.Value(integration))
-}
-
-// PublishSignalsResult holds the result of a PublishSignals operation.
-type PublishSignalsResult struct {
-	ItemsBySignals map[string]resource.SaveSummary `json:"itemsBySignal"`
-}
-
-var methodPublishSignals = resource.SaveMethod[map[string]views.ItemSave, PublishSignalsResult]{
-	APIVersion: "1.1rc1",
-	Method:     "admin.publishSignals",
-	DataParam:  "itemsBySignal",
+type AdminNamespace struct {
+	h jsonrpc.Handler
 }
 
 // SelectSignals returns a new request for querying signals and related
 // resources.
-//
-// Disclaimer: this method is based on a pre-release of the Clarify API, and
-// might be unstable or stop working.
-func (c *Client) SelectSignals(integration string) resource.SelectRequest[SelectSignalsResult] {
-	return methodSelectSignals.NewRequest(c.h, paramIntegration.Value(integration))
+func (ns AdminNamespace) SelectSignals(integration string, q params.ResourceQuery) SelectSignalsRequest {
+	return methodSelectSignals.NewRequest(ns.h,
+		paramIntegration.Value(integration),
+		paramQuery.Value(q),
+		paramFormat.Value(views.SelectionFormat{
+			DataAsArray:         true,
+			GroupIncludedByType: true,
+		}),
+	)
 }
 
-// SelectSignalsResult holds the result of a SelectSignals operation.
-type SelectSignalsResult = resource.Selection[views.Signal, views.SignalInclude]
+type (
+	// SelectSignalsRequest describe an initialized admin.selectSignals RPC
+	// request with access to a request handler.
+	SelectSignalsRequest = request.Relational[SelectSignalsResult]
 
-var methodSelectSignals = resource.SelectMethod[SelectSignalsResult]{
-	APIVersion: "1.1rc1",
+	// SelectSignalsResult describe the result format for a
+	// SelectSignalsRequest.
+	SelectSignalsResult = views.Selection[[]views.Signal, views.SignalInclude]
+)
+
+var methodSelectSignals = request.RelationalMethod[SelectSignalsResult]{
+	APIVersion: apiVersion,
 	Method:     "admin.selectSignals",
 }
 
-// SelectItems returns a new request for querying signals and related
-// resources.
-//
-// Disclaimer: this method is based on a pre-release of the Clarify API, and
-// might be unstable or stop working.
-func (c *Client) SelectItems() resource.SelectRequest[SelectItemsResult] {
-	return methodSelectItems.NewRequest(c.h)
+// PublishSignals returns a new request for publishing signals as items.
+func (ns AdminNamespace) PublishSignals(integration string, itemsBySignal map[string]views.ItemSave) PublishSignalsRequest {
+	return methodPublishSignals.NewRequest(ns.h,
+		paramIntegration.Value(integration),
+		paramItemsBySignal.Value(itemsBySignal),
+	)
 }
 
-// SelectItemsResult holds the result of a SelectItems operation.
-type SelectItemsResult = resource.Selection[views.Item, views.ItemInclude]
+type (
+	// PublishSignalsRequest describe an initialized admin.publishSignal RPC
+	// request with access to a request handler.
+	PublishSignalsRequest = request.Request[PublishSignalsResult]
 
-var methodSelectItems = resource.SelectMethod[SelectItemsResult]{
-	APIVersion: "1.1rc1",
+	// PublishSignalsResult describe the result format for a
+	// PublishSignalsRequest.
+	PublishSignalsResult struct {
+		ItemsBySignals map[string]views.SaveSummary `json:"itemsBySignal"`
+	}
+)
+
+var methodPublishSignals = request.Method[PublishSignalsResult]{
+	APIVersion: apiVersion,
+	Method:     "admin.publishSignals",
+}
+
+type ClarifyNamespace struct {
+	h jsonrpc.Handler
+}
+
+// SelectItems returns a request for querying items.
+func (ns ClarifyNamespace) SelectItems(q params.ResourceQuery) SelectItemsRequest {
+	return methodSelectItems.NewRequest(ns.h,
+		paramQuery.Value(q),
+		paramFormat.Value(views.SelectionFormat{
+			DataAsArray:         true,
+			GroupIncludedByType: true,
+		}),
+	)
+}
+
+type (
+	// SelectItemsRequest describe an initialized clarify.selectItems RPC
+	// request with access to a request handler.
+	SelectItemsRequest = request.Relational[SelectItemsResult]
+
+	// SelectItemsResult describe the result format for a SelectItemsRequest.
+	SelectItemsResult = views.Selection[[]views.Item, views.ItemInclude]
+)
+
+var methodSelectItems = request.RelationalMethod[SelectItemsResult]{
+	APIVersion: apiVersion,
 	Method:     "clarify.selectItems",
 }
 
-// DataFrame returns a new request from retrieving data from clarify. The
-// request can be furthered modified by a chainable API before it's executed. By
-// default, the data section is set to be included in the response.
-//
-// Disclaimer: this method is based on a pre-release of the Clarify API, and
-// might be unstable or stop working.
-func (c *Client) DataFrame() DataFrameRequest {
-	return DataFrameRequest{
-		parent: methodDataFrame.NewRequest(c.h),
-	}
+// DataFrame returns a new request from retrieving raw or aggregated data from
+// Clarify. When a data query rollup is specified, data is aggregated using the
+// default aggregation methods for each item is used. That is statistical
+// aggregation values (count, min, max, sum, avg) for numeric items and a state
+// histogram aggregation in seconds (duration spent in each state per bucket)
+// for enum items.
+func (ns ClarifyNamespace) DataFrame(items params.ResourceQuery, data params.DataQuery) DataFrameRequest {
+	return methodDataFrame.NewRequest(ns.h,
+		paramQuery.Value(items),
+		paramData.Value(data),
+		paramFormat.Value(views.SelectionFormat{
+			GroupIncludedByType: true,
+		}),
+	)
 }
 
-var methodDataFrame = resource.SelectMethod[DataFrameResult]{
-	APIVersion: "1.1rc1",
+type (
+	DataFrameRequest = request.Relational[DataFrameResult]
+	DataFrameResult  = views.Selection[views.DataFrame, views.DataFrameInclude]
+)
+
+var methodDataFrame = request.RelationalMethod[DataFrameResult]{
+	APIVersion: apiVersion,
 	Method:     "clarify.dataFrame",
+}
+
+// Evaluate returns a new request for retrieving aggregated data from Clarify
+// and perform calculations.
+func (ns ClarifyNamespace) Evaluate(items []params.ItemAggregation, calculations []params.Calculation, data params.DataQuery) EvaluateRequest {
+	return methodEvaluate.NewRequest(ns.h,
+		paramItems.Value(items),
+		paramCalculations.Value(calculations),
+		paramData.Value(data),
+		paramFormat.Value(views.SelectionFormat{
+			GroupIncludedByType: true,
+		}),
+	)
+}
+
+type (
+	// EvaluateRequest describe an initialized clarify.evaluate RPC request with
+	// access to a request handler.
+	EvaluateRequest = request.Relational[EvaluateResult]
+
+	// EvaluateResult describe the result format for a EvaluateRequest.
+	EvaluateResult = views.Selection[views.DataFrame, views.DataFrameInclude]
+)
+
+var methodEvaluate = request.RelationalMethod[EvaluateResult]{
+	APIVersion: apiVersion,
+	Method:     "clarify.evaluate",
 }

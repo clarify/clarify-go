@@ -26,13 +26,30 @@ func main() {
 
 	query := params.Query().
 		Where(params.CompareField("annotations.clarify/clarify-go/example/name", params.Equal("publish_signals"))).
-		Limit(10)
+		Limit(1)
 
 	data := params.Data().
 		Where(params.TimeRange(t1, t2)).
 		RollupDuration(time.Hour, time.Monday)
 
-	result, err := client.Clarify().DataFrame(query, data).Do(ctx)
+	// Fetch an item for use in evaluate.
+	selection, err := client.Clarify().SelectItems(query).Do(ctx)
+	if err != nil {
+		panic(err)
+	}
+	if len(selection.Data) == 0 {
+		panic("this example require your organization to expose at least one item")
+	}
+	items := []params.ItemAggregation{
+		{Alias: "i1", ID: selection.Data[0].ID, Aggregation: params.AggregateAvg},
+	}
+	calculations := []params.Calculation{
+		{Alias: "c1", Formula: "sin(a)"},
+		{Alias: "c2", Formula: "sin(2*PI*time_seconds/3600)"},
+		{Alias: "c3", Formula: "max(c1,c2)"},
+	}
+
+	result, err := client.Clarify().Evaluate(items, calculations, data).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

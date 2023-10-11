@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@ package views
 
 import (
 	"github.com/clarify/clarify-go/fields"
-	"github.com/clarify/clarify-go/jsonrpc/resource"
 )
 
 // Signal describe the select view for a signal.
-type Signal = resource.Resource[SignalAttributes, SignalRelationships]
+type Signal = Resource[SignalAttributes, SignalRelationships]
 
 type SignalInclude struct {
 	Items []Item `json:"items"`
@@ -46,21 +45,21 @@ type SignalReadOnlyAttributes struct {
 // SignalSaveAttributes contains attributes that are part of the signal save
 // view.
 type SignalSaveAttributes struct {
-	Name           string               `json:"name"`
-	Description    string               `json:"description"`
-	ValueType      ValueType            `json:"valueType"`
-	SourceType     SourceType           `json:"sourceType"`
-	EngUnit        string               `json:"engUnit"`
-	SampleInterval fields.FixedDuration `json:"sampleInterval"`
-	GapDetection   fields.FixedDuration `json:"gapDetection"`
-	Labels         fields.Labels        `json:"labels"`
-	EnumValues     fields.EnumValues    `json:"enumValues"`
+	Name           string                       `json:"name"`
+	Description    string                       `json:"description"`
+	ValueType      ValueType                    `json:"valueType"`
+	SourceType     SourceType                   `json:"sourceType"`
+	EngUnit        string                       `json:"engUnit"`
+	SampleInterval fields.FixedDurationNullZero `json:"sampleInterval"`
+	GapDetection   fields.FixedDurationNullZero `json:"gapDetection"`
+	Labels         fields.Labels                `json:"labels"`
+	EnumValues     fields.EnumValues            `json:"enumValues"`
 }
 
 // SignalRelationships declare the available relationships for the signal model.
 type SignalRelationships struct {
-	Integration resource.ToOne `json:"integration"`
-	Item        resource.ToOne `json:"item"`
+	Integration ToOne `json:"integration"`
+	Item        ToOne `json:"item"`
 }
 
 // ValueType determine how data values should be interpreted.

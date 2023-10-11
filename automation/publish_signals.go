@@ -22,7 +22,7 @@ import (
 	"runtime/debug"
 
 	"github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/query"
+	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 )
 
@@ -100,7 +100,7 @@ type PublishSignals struct {
 
 	// SignalsFilter can optionally be specified to limit which signals to
 	// publish.
-	SignalsFilter query.FilterType
+	SignalsFilter params.ResourceFilterType
 
 	// TransformVersion should be changed if you want existing items to be
 	// republished despite the source signal being unchanged.
@@ -130,13 +130,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 
 	// We iterate signals without requesting the total count. This is an
 	// optimization bet that total % limit == 0 is uncommon.
-	q := query.Query{
-		Sort:  []string{"id"},
-		Limit: selectSignalsPageSize,
-	}
-	if p.SignalsFilter != nil {
-		q.Filter = p.SignalsFilter.Filter()
-	}
+	q := params.Query().Where(p.SignalsFilter).Sort("id").Limit(selectSignalsPageSize)
 
 	items := make(map[string]views.ItemSave)
 	flush := func(integrationID string) error {
@@ -150,7 +144,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 			opts.EncodeJSON(items)
 		}
 		if !opts.DryRun {
-			result, err := c.PublishSignals(integrationID, items).Do(ctx)
+			result, err := c.Admin().PublishSignals(integrationID, items).Do(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to publish signals: %w", err)
 			}
@@ -166,7 +160,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 	}
 
 	for _, id := range p.Integrations {
-		q.Skip = 0
+
 		more := true
 		for more {
 			if err := ctx.Err(); err != nil {
@@ -178,13 +172,12 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 			if err != nil {
 				return err
 			}
-			q.Skip += q.Limit
-
 			if len(items) >= publishSignalsPageSize {
 				if err := flush(id); err != nil {
 					return err
 				}
 			}
+			q = q.NextPage()
 		}
 
 		if err := flush(id); err != nil {
@@ -197,10 +190,8 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 
 // addItems adds items that require update to dest from all signals matching
 // the integration ID and query q.
-func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.ItemSave, c *clarify.Client, integrationID string, q query.Query, opts PublishOptions) (bool, error) {
-	results, err := c.SelectSignals(integrationID).
-		Query(q).
-		Include("item").Do(ctx)
+func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.ItemSave, c *clarify.Client, integrationID string, q params.ResourceQuery, opts PublishOptions) (bool, error) {
+	results, err := c.Admin().SelectSignals(integrationID, q).Include("item").Do(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -252,12 +243,12 @@ func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.Item
 	if results.Meta.Total >= 0 {
 		// More can be calculated exactly when the total count was requested (or
 		// calculated for free by the backend).
-		more = q.Skip+len(results.Data) < results.Meta.Total
+		more = q.GetSkip()+len(results.Data) < results.Meta.Total
 	} else {
 		// Fallback to approximate the more value when total was not explicitly
 		// requested. For large values of q.Limit, this approximation is likely
 		// faster -- on average -- then to request a total count.
-		more = (len(results.Data) == q.Limit)
+		more = (len(results.Data) == q.GetLimit())
 	}
 	return more, nil
 
