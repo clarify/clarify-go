@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resource
+package request
 
 import (
 	"context"
@@ -20,7 +20,8 @@ import (
 	"github.com/clarify/clarify-go/jsonrpc"
 )
 
-// Method is a constructor for Requests against a given RPC method.
+// Method is a constructor for an RPC request for a specific RPC method and API
+// version.
 type Method[R any] struct {
 	APIVersion string
 	Method     string
@@ -36,8 +37,7 @@ func (cfg Method[R]) NewRequest(h jsonrpc.Handler, params ...jsonrpc.Param) Requ
 	}
 }
 
-// Request allows creating or updating properties based on a keyed
-// relation.
+// Request describe an initialized RPC request with access to a request handler.
 type Request[R any] struct {
 	apiVersion string
 	method     string
@@ -48,12 +48,16 @@ type Request[R any] struct {
 }
 
 // Do performs the request against the server and returns the result.
-func (req Request[R]) Do(ctx context.Context, extraParams ...jsonrpc.Param) (*R, error) {
-	params := make([]jsonrpc.Param, 0, len(req.baseParams)+len(extraParams))
-	params = append(params, req.baseParams...)
-	params = append(params, extraParams...)
+func (req Request[R]) Do(ctx context.Context) (*R, error) {
+	return req.do(ctx)
+}
 
-	rpcReq := jsonrpc.NewRequest(req.method, params...)
+func (req Request[R]) do(ctx context.Context, params ...jsonrpc.Param) (*R, error) {
+	allParams := make([]jsonrpc.Param, 0, len(req.baseParams)+len(params))
+	allParams = append(allParams, req.baseParams...)
+	allParams = append(allParams, params...)
+
+	rpcReq := jsonrpc.NewRequest(req.method, allParams...)
 	if req.apiVersion != "" {
 		rpcReq.APIVersion = req.apiVersion
 	}

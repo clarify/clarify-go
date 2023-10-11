@@ -61,8 +61,8 @@ func main() {
 					0: "not on fire",
 					1: "on fire",
 				},
-				SampleInterval: fields.AsFixedDuration(15 * time.Minute),
-				GapDetection:   fields.AsFixedDuration(2 * time.Hour),
+				SampleInterval: fields.AsFixedDurationNullZero(15 * time.Minute),
+				GapDetection:   fields.AsFixedDurationNullZero(2 * time.Hour),
 			},
 		},
 	}

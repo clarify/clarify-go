@@ -8,7 +8,7 @@ import (
 
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/automation"
-	"github.com/clarify/clarify-go/query"
+	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -52,10 +52,10 @@ func main() {
 		// requirement; for production cases, you may want this integration ID to be
 		// configured to be something else.
 		Integrations: []string{creds.Integration},
-		SignalsFilter: query.Comparisons{
-			"annotations." + keyExampleName:    query.Equal(exampleName),
-			"annotations." + keyExamplePublish: query.Equal(annotationTrue),
-		}.Filter(),
+		SignalsFilter: params.Comparisons{
+			"annotations." + keyExampleName:    params.Equal(exampleName),
+			"annotations." + keyExamplePublish: params.Equal(annotationTrue),
+		},
 		TransformVersion: transformVersion,
 		Transforms: []func(item *views.ItemSave){
 			transformEnumValuesToFireEmoji,

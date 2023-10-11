@@ -6,7 +6,7 @@ import (
 	"os"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/query"
+	"github.com/clarify/clarify-go/params"
 )
 
 func main() {
@@ -26,9 +26,14 @@ func main() {
 	// configured to be something else.
 	integrationID := creds.Integration
 
-	result, err := client.SelectSignals(integrationID).Filter(query.Comparisons{
-		"annotations.clarify/clarify-go/example/name": query.Equal("save_signals"),
-	}).Limit(10).Do(ctx)
+	result, err := client.Admin().SelectSignals(
+		integrationID,
+		params.Query().
+			Where(params.Comparisons{
+				"annotations.clarify/clarify-go/example/name": params.Equal("save_signals"),
+			}).
+			Limit(10),
+	).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

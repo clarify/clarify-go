@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/query"
+	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/testdata"
 )
 
-func ExampleClient_SelectSignals() {
+func ExampleAdminNamespace_SelectSignals() {
 	const integrationID = "c8ktonqsahsmemfs7lv0"
 
 	// In this example we use a mock client; real code should insted initialize
@@ -40,13 +40,11 @@ func ExampleClient_SelectSignals() {
 
 	ctx := context.Background()
 
-	res, err := c.SelectSignals(integrationID).
-		Filter(
-			query.Field("id", query.In("c8keagasahsp3cpvma20", "c8l8bc2sahsgjg5cckcg")),
-		).
-		Limit(1).
-		Include("items").
-		Do(ctx)
+	res, err := c.Admin().SelectSignals(integrationID,
+		params.Query().Where(
+			params.CompareField("id", params.In("c8keagasahsp3cpvma20", "c8l8bc2sahsgjg5cckcg")),
+		).Limit(1),
+	).Include("items").Do(ctx)
 
 	if err != nil {
 		fmt.Println("error:", err)
@@ -74,7 +72,7 @@ func ExampleClient_SelectSignals() {
 	// included.items.0.meta.annotations: map[clarify/clarify-go/from/signal/attributes-hash:220596a7b7b4ea2ac5abb6a13e6198f161443226 clarify/clarify-go/from/signal/id:c8keagasahsp3cpvma20]
 }
 
-func ExampleClient_DataFrame() {
+func ExampleClarifyNamespace_DataFrame() {
 	const integrationID = "c8ktonqsahsmemfs7lv0"
 	const itemID = "c8l95d2sahsh22imiabg"
 
@@ -90,18 +88,18 @@ func ExampleClient_DataFrame() {
 
 	ctx := context.Background()
 
-	res, err := c.DataFrame().
-		Filter(
-			query.Field("id", query.In("c8keagasahsp3cpvma20")),
-		).
-		Limit(1).
-		TimeRange(
-			time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-			time.Date(2022, 1, 1, 4, 0, 0, 0, time.UTC),
-		).
-		RollupBucket(time.Hour).
-		Include("items").
-		Do(ctx)
+	res, err := c.Clarify().DataFrame(
+		params.Query().Where(
+			params.CompareField("id", params.In("c8keagasahsp3cpvma20")),
+		).Limit(1),
+
+		params.Data().Where(
+			params.TimeRange(
+				time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+				time.Date(2022, 1, 1, 4, 0, 0, 0, time.UTC),
+			),
+		).RollupDuration(time.Hour, time.Monday),
+	).Include("items").Do(ctx)
 
 	if err != nil {
 		fmt.Println("error:", err)

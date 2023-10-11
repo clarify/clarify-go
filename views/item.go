@@ -16,11 +16,10 @@ package views
 
 import (
 	"github.com/clarify/clarify-go/fields"
-	"github.com/clarify/clarify-go/jsonrpc/resource"
 )
 
 // Item describe the select view for an item.
-type Item = resource.Resource[ItemAttributes, ItemRelationships]
+type Item = Resource[ItemAttributes, ItemRelationships]
 
 type ItemInclude struct{}
 
@@ -62,21 +61,21 @@ type ItemAttributes struct {
 
 // ItemSaveAttributes contains attributes that are part of the item save view.
 type ItemSaveAttributes struct {
-	Name           string               `json:"name"`
-	Description    string               `json:"description"`
-	ValueType      ValueType            `json:"valueType"`
-	SourceType     SourceType           `json:"sourceType"`
-	EngUnit        string               `json:"engUnit"`
-	SampleInterval fields.FixedDuration `json:"sampleInterval"`
-	GapDetection   fields.FixedDuration `json:"gapDetection"`
-	Labels         fields.Labels        `json:"labels"`
-	EnumValues     fields.EnumValues    `json:"enumValues"`
-	Visible        bool                 `json:"visible"`
+	Name           string                       `json:"name"`
+	Description    string                       `json:"description"`
+	ValueType      ValueType                    `json:"valueType"`
+	SourceType     SourceType                   `json:"sourceType"`
+	EngUnit        string                       `json:"engUnit"`
+	SampleInterval fields.FixedDurationNullZero `json:"sampleInterval"`
+	GapDetection   fields.FixedDurationNullZero `json:"gapDetection"`
+	Labels         fields.Labels                `json:"labels"`
+	EnumValues     fields.EnumValues            `json:"enumValues"`
+	Visible        bool                         `json:"visible"`
 }
 
 // ItemRelationships describe the item relationships that's exposed by the API.
 type ItemRelationships struct {
-	CreatedBy    resource.ToOne `json:"createdBy"`
-	UpdatedBy    resource.ToOne `json:"updatedBy"`
-	Organization resource.ToOne `json:"organization"`
+	CreatedBy    ToOne `json:"createdBy"`
+	UpdatedBy    ToOne `json:"updatedBy"`
+	Organization ToOne `json:"organization"`
 }
