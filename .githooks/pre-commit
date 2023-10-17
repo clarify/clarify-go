@@ -1,0 +1,4 @@
+#!/bin/sh
+
+set -ex
+golangci-lint run --new-from-rev=origin/main ./...

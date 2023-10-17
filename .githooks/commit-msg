@@ -1,0 +1,4 @@
+#!/bin/sh
+grep -v '^[#;]' "$1" | fold -w 72 -s > "$1".rewrite
+mv "$1".rewrite "$1"
+
