@@ -28,8 +28,8 @@ import (
 func ExampleAdminNamespace_SelectSignals() {
 	const integrationID = "c8ktonqsahsmemfs7lv0"
 
-	// In this example we use a mock client; real code should insted initialize
-	// using a clarify.Credentials instance.
+	// In this example we use a mock client; real code should instead initialize
+	// client using a clarify.Credentials instance.
 	h := mockRPCHandler{
 		"admin.selectsignals": {
 			err:       nil,
@@ -76,8 +76,8 @@ func ExampleClarifyNamespace_DataFrame() {
 	const integrationID = "c8ktonqsahsmemfs7lv0"
 	const itemID = "c8l95d2sahsh22imiabg"
 
-	// In this example we use a mock client; real code should insted initialize
-	// using a clarify.Credentials instance.
+	// In this example we use a mock client; real code should instead initialize
+	// client using a clarify.Credentials instance.
 	h := mockRPCHandler{
 		"clarify.dataframe": {
 			err:       nil,
@@ -123,5 +123,4 @@ func ExampleClarifyNamespace_DataFrame() {
 	// len(included.items): 1
 	// included.items.0.id: c8l95d2sahsh22imiabg
 	// included.items.0.meta.annotations: map[clarify/clarify-go/from/signal/attributes-hash:220596a7b7b4ea2ac5abb6a13e6198f161443226 clarify/clarify-go/from/signal/id:c8keagasahsp3cpvma20]
-
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,14 +44,14 @@ type HTTPError = jsonrpc.HTTPError
 
 // Client errors.
 const (
-	ErrBadCredentials strErr = "bad credentials"
-	ErrBadResponse    strErr = "bad response"
-	ErrBadRequest     strErr = "bad request"
+	ErrBadCredentials strError = "bad credentials"
+	ErrBadResponse    strError = "bad response"
+	ErrBadRequest     strError = "bad request"
 )
 
-type strErr string
+type strError string
 
-func (err strErr) Error() string { return string(err) }
+func (err strError) Error() string { return string(err) }
 
 // PathErrors describes issues for fields in a data-structure. Nested field
 // errors are reported with as `<parentField>.<subField>`. Field names are

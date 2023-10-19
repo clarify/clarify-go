@@ -36,17 +36,22 @@ type DataQuery struct {
 	query dataQuery
 }
 
+var (
+	_ json.Marshaler   = DataQuery{}
+	_ json.Unmarshaler = (*DataQuery)(nil)
+)
+
 // Data returns a new DataQuery that joins passed in filters with logical AND.
 func Data() DataQuery {
 	return DataQuery{}
 }
 
-func (q *DataQuery) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &q.query)
-}
-
 func (q DataQuery) MarshalJSON() ([]byte, error) {
 	return json.Marshal(q.query)
+}
+
+func (q *DataQuery) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &q.query)
 }
 
 // Origin returns a new data query with a custom rollup bucket origin. The

@@ -23,11 +23,7 @@ import (
 
 type Comparisons map[string]Comparison
 
-var (
-	_ interface {
-		ResourceFilterType
-	} = Comparisons{}
-)
+var _ ResourceFilterType = Comparisons{}
 
 // CompareField returns a new filter comparing a single field path.
 func CompareField(path string, cmp Comparison) Comparisons {
@@ -47,17 +43,10 @@ type Comparison struct {
 }
 
 var (
-	_ interface {
-		json.Marshaler
-		fmt.Stringer
-	} = Comparison{}
+	_ fmt.Stringer     = Comparison{}
+	_ json.Marshaler   = Comparison{}
 	_ json.Unmarshaler = (*Comparison)(nil)
 )
-
-func (cmp Comparison) String() string {
-	b, _ := json.Marshal(cmp)
-	return string(b)
-}
 
 // MergeOperators merges multiple comparisons with different operators together
 // to a single comparison entry.
@@ -245,6 +234,11 @@ func Regex(pattern string) Comparison {
 	return Comparison{
 		value: &opComparison{Regex: pattern},
 	}
+}
+
+func (cmp Comparison) String() string {
+	b, _ := json.Marshal(cmp)
+	return string(b)
 }
 
 func (c Comparison) MarshalJSON() ([]byte, error) {

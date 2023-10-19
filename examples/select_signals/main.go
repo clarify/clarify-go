@@ -26,14 +26,11 @@ func main() {
 	// configured to be something else.
 	integrationID := creds.Integration
 
-	result, err := client.Admin().SelectSignals(
-		integrationID,
-		params.Query().
-			Where(params.Comparisons{
-				"annotations.clarify/clarify-go/example/name": params.Equal("save_signals"),
-			}).
-			Limit(10),
-	).Do(ctx)
+	query := params.Query().
+		Where(params.Comparisons{"annotations.clarify/clarify-go/example/name": params.Equal("save_signals")}).
+		Limit(10)
+
+	result, err := client.Admin().SelectSignals(integrationID, query).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

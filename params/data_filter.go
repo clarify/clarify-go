@@ -26,12 +26,17 @@ type DataFilter struct {
 	filter dataFilter
 }
 
-func (q *DataFilter) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &q.filter)
-}
+var (
+	_ json.Marshaler   = DataFilter{}
+	_ json.Unmarshaler = (*DataFilter)(nil)
+)
 
 func (q DataFilter) MarshalJSON() ([]byte, error) {
 	return json.Marshal(q.filter)
+}
+
+func (q *DataFilter) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &q.filter)
 }
 
 // DataAnd joins one or more data filters with logical and.
@@ -39,7 +44,6 @@ func DataAnd(filters ...DataFilter) DataFilter {
 	var result DataFilter
 
 	for _, f := range filters {
-
 		// Use greatest non-zero times.$gte value.
 		switch {
 		case f.filter.Times.GreaterOrEqual.IsZero():
@@ -107,7 +111,6 @@ func TimeRange(gte, lt time.Time) DataFilter {
 			},
 		},
 	}
-
 }
 
 type seriesFilter struct {
@@ -115,7 +118,7 @@ type seriesFilter struct {
 }
 
 // SeriesIn return a data filter that reduce the time-series to encode in the
-// final result to the ones the ones that are in the specified list of keys.
+// final result to the ones that are in the specified list of keys.
 func SeriesIn(keys ...string) DataFilter {
 	return DataFilter{
 		filter: dataFilter{

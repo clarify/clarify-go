@@ -81,6 +81,13 @@ type ResourceFilter struct {
 	paths Comparisons
 }
 
+var (
+	_ ResourceFilterType = ResourceFilter{}
+	_ fmt.Stringer       = ResourceFilter{}
+	_ json.Marshaler     = ResourceFilter{}
+	_ json.Unmarshaler   = (*ResourceFilter)(nil)
+)
+
 func (f ResourceFilter) filter() ResourceFilter {
 	return f
 }
@@ -95,14 +102,6 @@ func FilterAll() ResourceFilter {
 func (f ResourceFilter) matchAll() bool {
 	return len(f.and) == 0 && len(f.or) == 0 && len(f.paths) == 0
 }
-
-var (
-	_ interface {
-		json.Marshaler
-		fmt.Stringer
-	} = ResourceFilter{}
-	_ json.Unmarshaler = (*ResourceFilter)(nil)
-)
 
 func (f ResourceFilter) String() string {
 	b, _ := f.MarshalJSON()
