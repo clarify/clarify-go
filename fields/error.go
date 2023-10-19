@@ -16,10 +16,10 @@ package fields
 
 // Parsing errors.
 const (
-	ErrBadCalendarDuration strErr = "must be RFC 3339 duration in range year to fraction"
-	ErrBadFixedDuration    strErr = "must be RFC 3339 duration in range week to fraction"
+	ErrBadCalendarDuration strError = "must be RFC 3339 duration in range year to fraction"
+	ErrBadFixedDuration    strError = "must be RFC 3339 duration in range week to fraction"
 )
 
-type strErr string
+type strError string
 
-func (err strErr) Error() string { return string(err) }
+func (err strError) Error() string { return string(err) }

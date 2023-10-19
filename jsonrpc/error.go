@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import (
 
 // Client errors.
 const (
-	ErrBadRequest  strErr = "bad request"
-	ErrBadResponse strErr = "bad response"
+	ErrBadRequest  strError = "bad request"
+	ErrBadResponse strError = "bad response"
 )
 
-type strErr string
+type strError string
 
-func (err strErr) Error() string { return string(err) }
+func (err strError) Error() string { return string(err) }
 
 type joinError struct {
 	err, next error

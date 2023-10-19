@@ -20,11 +20,11 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	result, err := client.Clarify().SelectItems(
-		params.Query().Where(params.Comparisons{
-			"annotations.clarify/clarify-go/example/name": params.Equal("publish_signals"),
-		}).Limit(10),
-	).Do(ctx)
+	query := params.Query().
+		Where(params.Comparisons{"annotations.clarify/clarify-go/example/name": params.Equal("publish_signals")}).
+		Limit(10)
+
+	result, err := client.Clarify().SelectItems(query).Do(ctx)
 	if err != nil {
 		panic(err)
 	}

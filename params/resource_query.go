@@ -35,6 +35,11 @@ type ResourceQuery struct {
 	query    resourceQuery
 }
 
+var (
+	_ json.Marshaler   = ResourceQuery{}
+	_ json.Unmarshaler = (*ResourceQuery)(nil)
+)
+
 // Query returns a new resource query which joins the passed in filters with
 // logical AND.
 func Query() ResourceQuery {

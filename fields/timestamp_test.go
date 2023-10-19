@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,6 @@ func TestTimestampTruncate(t *testing.T) {
 	t.Run("Timestamp(-1).Truncate(3µs)", test(-1, 3*time.Microsecond))
 	t.Run("Timestamp(1).Truncate(11µs)", test(1, 11*time.Microsecond))
 	t.Run("Timestamp(1).Truncate(13s)", test(1, 13*time.Microsecond))
-
 }
 
 func FuzzTimestampTruncate(f *testing.F) {
@@ -106,7 +105,6 @@ func FuzzTimestampTruncate(f *testing.F) {
 		t.Run(testName+"==timestampTimeBucket(ts,d,origin,min,max)", compareTimestampTruncateTimescale(ts, d))
 		t.Run(testName+"==custom", compareTimestampTruncateCustom(ts, d))
 	})
-
 }
 
 func softCompareTimestampTruncateTime(ts fields.Timestamp, d time.Duration) func(t *testing.T) {

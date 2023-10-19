@@ -104,9 +104,7 @@ type ItemAggregation struct {
 	State       int             `json:"state"`
 }
 
-var (
-	_ json.Marshaler = ItemAggregation{}
-)
+var _ json.Marshaler = ItemAggregation{}
 
 func (ia ItemAggregation) MarshalJSON() ([]byte, error) {
 	var v any

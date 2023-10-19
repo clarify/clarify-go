@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,11 @@ const (
 	OriginTime Timestamp = 946857600000000
 )
 
+// AsTimestamp converts a time.Time to Timestamp.
+func AsTimestamp(t time.Time) Timestamp {
+	return Timestamp(t.UnixMicro())
+}
+
 // Truncate returns the result of rounding ts down to a multiple of d (since
 // OriginTime). Note that this is not fully equivalent to using Truncate on the
 // time.Time type, as we are deliberately using a different origin.
@@ -59,11 +64,6 @@ func (ts Timestamp) Add(d time.Duration) Timestamp {
 // Sub returns the differences between ts and ts2 as a fixed duration.
 func (ts Timestamp) Sub(ts2 Timestamp) time.Duration {
 	return time.Duration(ts-ts2) * 1e3
-}
-
-// AsTimestamp converts a time.Time to Timestamp.
-func AsTimestamp(t time.Time) Timestamp {
-	return Timestamp(t.UnixMicro())
 }
 
 // Time returns the Timestamp as time.Time.

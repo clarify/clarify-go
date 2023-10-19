@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@ import (
 // to null.
 type HexadecimalNullZero Hexadecimal
 
-var _ json.Marshaler = HexadecimalNullZero{}
-var _ json.Unmarshaler = (*HexadecimalNullZero)(nil)
+var (
+	_ json.Marshaler   = HexadecimalNullZero{}
+	_ json.Unmarshaler = (*HexadecimalNullZero)(nil)
+)
 
 func (zn HexadecimalNullZero) MarshalJSON() ([]byte, error) {
 	if zn == nil {
@@ -48,8 +50,10 @@ func (zn *HexadecimalNullZero) UnmarshalJSON(data []byte) error {
 // hexadecimal string when encoded. It is less compact that Base64 encoding.
 type Hexadecimal []byte
 
-var _ encoding.TextMarshaler = Hexadecimal(nil)
-var _ encoding.TextUnmarshaler = (*Hexadecimal)(nil)
+var (
+	_ encoding.TextMarshaler   = Hexadecimal(nil)
+	_ encoding.TextUnmarshaler = (*Hexadecimal)(nil)
+)
 
 func (b Hexadecimal) String() string {
 	return hex.EncodeToString(b)
@@ -74,8 +78,10 @@ func (b *Hexadecimal) UnmarshalText(data []byte) error {
 // Base64NullZero is a variant of Base64 which zero value JSON-encodes to null.
 type Base64NullZero Base64
 
-var _ json.Marshaler = Base64NullZero{}
-var _ json.Unmarshaler = (*Base64NullZero)(nil)
+var (
+	_ json.Marshaler   = Base64NullZero{}
+	_ json.Unmarshaler = (*Base64NullZero)(nil)
+)
 
 func (zn Base64NullZero) MarshalJSON() ([]byte, error) {
 	if zn == nil {
@@ -97,8 +103,11 @@ func (zn *Base64NullZero) UnmarshalJSON(data []byte) error {
 // Hexadecimal.
 type Base64 []byte
 
-var _ encoding.TextMarshaler = Hexadecimal(nil)
-var _ encoding.TextUnmarshaler = (*Hexadecimal)(nil)
+var (
+	_ encoding.TextMarshaler   = Hexadecimal(nil)
+	_ encoding.TextUnmarshaler = (*Hexadecimal)(nil)
+)
+
 var b64enc = base64.RawURLEncoding
 
 func (b Base64) String() string {

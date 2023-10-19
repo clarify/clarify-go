@@ -16,6 +16,7 @@ package fields
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -37,6 +38,12 @@ var (
 // CalendarDurationNullZero is a variant of CalendarDuration that JSON encodes
 // the zero-value to null.
 type CalendarDurationNullZero CalendarDuration
+
+var (
+	_ fmt.Stringer     = CalendarDurationNullZero{}
+	_ json.Marshaler   = CalendarDurationNullZero{}
+	_ json.Unmarshaler = (*CalendarDurationNullZero)(nil)
+)
 
 func (cd CalendarDurationNullZero) IsZero() bool {
 	return CalendarDuration(cd).IsZero()
@@ -87,6 +94,12 @@ type CalendarDuration struct {
 	Duration time.Duration
 }
 
+var (
+	_ fmt.Stringer             = CalendarDuration{}
+	_ encoding.TextMarshaler   = CalendarDuration{}
+	_ encoding.TextUnmarshaler = (*CalendarDuration)(nil)
+)
+
 // MonthDuration returns a duration that spans a given number of months.
 func MonthDuration(m int) CalendarDuration {
 	return CalendarDuration{Months: m}
@@ -94,16 +107,6 @@ func MonthDuration(m int) CalendarDuration {
 
 func (cd CalendarDuration) IsZero() bool {
 	return cd.Duration == 0 && cd.Months == 0
-}
-
-func (cd *CalendarDuration) UnmarshalText(b []byte) error {
-	_cd, ok := parseYearToFraction(string(b))
-	if !ok {
-		return fmt.Errorf("json: %w", ErrBadCalendarDuration)
-	}
-	cd.Months = _cd.Months
-	cd.Duration = _cd.Duration
-	return nil
 }
 
 func (cd CalendarDuration) String() string {
@@ -117,6 +120,16 @@ func (dd CalendarDuration) MarshalText() ([]byte, error) {
 		return nil, err
 	}
 	return []byte(s), nil
+}
+
+func (cd *CalendarDuration) UnmarshalText(b []byte) error {
+	_cd, ok := parseYearToFraction(string(b))
+	if !ok {
+		return fmt.Errorf("json: %w", ErrBadCalendarDuration)
+	}
+	cd.Months = _cd.Months
+	cd.Duration = _cd.Duration
+	return nil
 }
 
 // ParseCalendarDuration converts text-encoded RFC 3339 duration to its
@@ -217,6 +230,11 @@ func parseYearToFraction(s string) (CalendarDuration, bool) {
 // zero-value as null.
 type FixedDurationNullZero FixedDuration
 
+var (
+	_ json.Marshaler   = FixedDurationNullZero{}
+	_ json.Unmarshaler = (*FixedDurationNullZero)(nil)
+)
+
 // AsFixedDurationNullZero converts d to a FixedDurationNullZero instance.
 func AsFixedDurationNullZero(d time.Duration) FixedDurationNullZero {
 	return FixedDurationNullZero{Duration: d}
@@ -253,6 +271,12 @@ func (d *FixedDurationNullZero) UnmarshalJSON(b []byte) error {
 type FixedDuration struct {
 	time.Duration
 }
+
+var (
+	_ fmt.Stringer             = FixedDuration{}
+	_ encoding.TextMarshaler   = FixedDuration{}
+	_ encoding.TextUnmarshaler = (*FixedDuration)(nil)
+)
 
 // AsFixedDuration converts d to a FixedDuration instance.
 func AsFixedDuration(d time.Duration) FixedDuration {

@@ -28,8 +28,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const headerAPIVersion = "X-API-Version"
-const defaultAPIVersion = "1.0"
+const (
+	headerAPIVersion  = "X-API-Version"
+	defaultAPIVersion = "1.0"
+)
 
 var userAgent = "clarify-go/unknown"
 

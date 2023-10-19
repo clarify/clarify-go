@@ -23,14 +23,6 @@ import (
 	"github.com/clarify/clarify-go/fields"
 )
 
-var (
-	_ json.Unmarshaler = (*DataFrame)(nil)
-
-	_ json.Marshaler = DataFrame{}
-
-	_ sort.Interface = rawDataFrame{}
-)
-
 type DataFrameInclude struct {
 	Items []Item
 }
@@ -42,6 +34,11 @@ type DataSeries map[fields.Timestamp]float64
 // DataFrame provides JSON encoding and decoding for a map of series identified
 // by an arbitrary key.
 type DataFrame map[string]DataSeries
+
+var (
+	_ json.Marshaler   = DataFrame{}
+	_ json.Unmarshaler = (*DataFrame)(nil)
+)
 
 // ordered returns a valid and ordered RawDataFrame with duplicated entries
 // removed.
@@ -103,6 +100,8 @@ type rawDataFrame struct {
 	Times  []fields.Timestamp         `json:"times"`
 	Series map[string][]fields.Number `json:"series"`
 }
+
+var _ sort.Interface = rawDataFrame{}
 
 func (raw rawDataFrame) Len() int {
 	return len(raw.Times)

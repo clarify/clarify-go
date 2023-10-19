@@ -23,14 +23,14 @@ import (
 
 const (
 	apiVersion                            = "1.1"
-	paramIntegration    jsonrpc.ParamName = "integration"
+	paramCalculations   jsonrpc.ParamName = "calculations"
 	paramData           jsonrpc.ParamName = "data"
-	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
+	paramFormat         jsonrpc.ParamName = "format"
+	paramIntegration    jsonrpc.ParamName = "integration"
+	paramItems          jsonrpc.ParamName = "items"
 	paramItemsBySignal  jsonrpc.ParamName = "itemsBySignal"
 	paramQuery          jsonrpc.ParamName = "query"
-	paramItems          jsonrpc.ParamName = "items"
-	paramCalculations   jsonrpc.ParamName = "calculations"
-	paramFormat         jsonrpc.ParamName = "format"
+	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
 )
 
 // Client allows calling JSON RPC methods against Clarify.
