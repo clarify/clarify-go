@@ -1,4 +1,4 @@
-// Copyright 2022 Searis AS
+// Copyright 2022-2023 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package automation offers tools aimed at building automated routines.
+// Package automation offers tools for building customized Clarify routines. Use
+// the Routines type to build a three structure of named routines, and use the
+// automationcli sub-package for setting up a command-line tool that can match
+// and run these routines by name.
+//
+// While you could write all your routines from scratch, we provide a few
+// pre-implemented types that you might find useful:
+//   - Routines: Build a three-structure of sub-routines.
+//   - PublishSignals: Define filters that inspect signals in your organization,
+//     tracks changes to signal input, and publish them as new or existing items.
+//     Apply custom transforms to improve your item meta-data before save.
+//   - EvaluateActions: Run the powerful evaluate method against your Clarify
+//     instance to detect conditions and trigger custom actions.
+//   - LogDebug,LogInfo,LogWarn,LogError: Log a message to the console; useful
+//     for debugging and testing.
 package automation

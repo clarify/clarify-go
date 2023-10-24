@@ -16,13 +16,10 @@ package automation
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"runtime/debug"
+	"log/slog"
 
-	"github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
 )
 
@@ -31,68 +28,9 @@ const (
 	publishSignalsPageSize = 500
 )
 
-// Annotations used by automation tasks.
-const (
-	AnnotationPrefix                    = "clarify/clarify-go/"
-	AnnotationPublisherName             = AnnotationPrefix + "publisher/name"
-	AnnotationPublisherTransformVersion = AnnotationPrefix + "publisher/transform-version"
-	AnnotationPublisherSignalID         = AnnotationPrefix + "publisher/signal-id"
-	AnnotationPublisherSignalAttributes = AnnotationPrefix + "publisher/signal-attributes"
-)
-
-// LogOptions describe the options for operation logs.
-type LogOptions struct {
-	// Verbose, when true, enables detailed logs, such as full JSON summaries of
-	// operations.
-	Verbose bool
-
-	// Out describe the destination writer for logs. If unset, all logging is
-	// disabled.
-	Out io.Writer
-}
-
-func (opts LogOptions) EncodeJSON(v any) {
-	if opts.Out == nil {
-		return
-	}
-	enc := json.NewEncoder(opts.Out)
-	enc.SetIndent("", "  ")
-	_ = enc.Encode(v)
-}
-
-func (opts LogOptions) Printf(format string, a ...any) {
-	if opts.Out == nil {
-		return
-	}
-	fmt.Fprintf(opts.Out, format, a...)
-}
-
-// PublishOptions describe options that can be supplied when running a
-// PublishRuleSet.
-type PublishOptions struct {
-	LogOptions
-
-	// DryRun, if true, does not run the automation, but rather logs what it's
-	// planning to do.
-	DryRun bool
-
-	// Publisher is a name describing the publisher application. The default is
-	// the declared path of the main module.
-	Publisher string
-}
-
-func (opts PublishOptions) withDefaults() PublishOptions {
-	if opts.Publisher == "" {
-		info, ok := debug.ReadBuildInfo()
-		if ok {
-			opts.Publisher = info.Main.Path
-		}
-	}
-	return opts
-}
-
 // PublishSignals allows you to automate signal publishing from one or more
-// source integrations.
+// source integrations. The routine respects the DryRun and EarlyOut
+// configurations.
 type PublishSignals struct {
 	// Integrations must list the IDs of the integrations to publish signals
 	// from. If this list is empty, the rule set is a no-op.
@@ -100,7 +38,7 @@ type PublishSignals struct {
 
 	// SignalsFilter can optionally be specified to limit which signals to
 	// publish.
-	SignalsFilter params.ResourceFilterType
+	SignalsFilter fields.ResourceFilterType
 
 	// TransformVersion should be changed if you want existing items to be
 	// republished despite the source signal being unchanged.
@@ -111,56 +49,62 @@ type PublishSignals struct {
 	Transforms []func(item *views.ItemSave)
 }
 
-// Do performs the automation against c with the passed in opts.
-func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishOptions) error {
-	var total int
+var _ Routine = PublishSignals{}
+
+func (p PublishSignals) Do(ctx context.Context, cfg *Config) error {
+	logger := cfg.Logger()
+	client := cfg.Client()
+	earlyOut := cfg.EarlyOut()
+
+	var publishCount, errorCount int
+
 	defer func() {
-		var suffix string
-		if opts.DryRun {
-			suffix = " (dry-run)"
-		}
-		opts.Printf("-- Published %d signals from %d integrations%s.\n", total, len(p.Integrations), suffix)
+		logger.LogAttrs(ctx, slog.LevelInfo, "Publish signals completed",
+			slog.Int("integration_count", len(p.Integrations)),
+			slog.Int("publish_count", publishCount),
+			slog.Int("error_count", errorCount),
+		)
 	}()
 
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 
-	opts = opts.withDefaults()
-
 	// We iterate signals without requesting the total count. This is an
 	// optimization bet that total % limit == 0 is uncommon.
-	q := params.Query().Where(p.SignalsFilter).Sort("id").Limit(selectSignalsPageSize)
+	query := fields.Query().Sort("id").Limit(selectSignalsPageSize)
+	if p.SignalsFilter != nil {
+		query = query.Where(p.SignalsFilter)
+	}
 
 	items := make(map[string]views.ItemSave)
 	flush := func(integrationID string) error {
-		var suffix string
-		if opts.DryRun {
-			suffix = " (dry-run)"
-		}
-		opts.Printf("Publish %d items%s...\n", len(items), suffix)
-		if opts.Verbose {
-			opts.Printf("itemsBySignal:\n")
-			opts.EncodeJSON(items)
-		}
-		if !opts.DryRun {
-			result, err := c.Admin().PublishSignals(integrationID, items).Do(ctx)
+		logger.LogAttrs(ctx, slog.LevelInfo, "Publish signals", slog.Int("publish_count", publishCount))
+		logger.LogAttrs(ctx, slog.LevelDebug, "Publish parameters", slog.Group("params", slog.Any("itemBySignal", items)))
+
+		if !cfg.DryRun() {
+			result, err := client.Admin().PublishSignals(integrationID, items).Do(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to publish signals: %w", err)
+				if earlyOut {
+					return fmt.Errorf("publish signals: %w", err)
+				} else {
+					logger.LogAttrs(ctx, slog.LevelError, "Published items failed (flush)", AttrError(err), slog.Int("publish_count", len(items)))
+				}
+				errorCount += len(items)
+			} else {
+				logger.LogAttrs(ctx, slog.LevelInfo, "Published items (flush)", slog.Int("publish_count", len(items)))
+				publishCount += len(items)
+				logger.LogAttrs(ctx, slog.LevelDebug, "Publish results", slog.Any("result", result))
 			}
-			if opts.Verbose {
-				opts.Printf("result:\n")
-				opts.EncodeJSON(result)
-			}
+		} else {
+			publishCount += len(items)
 		}
 
-		total += len(items)
 		items = make(map[string]views.ItemSave)
 		return nil
 	}
 
 	for _, id := range p.Integrations {
-
 		more := true
 		for more {
 			if err := ctx.Err(); err != nil {
@@ -168,7 +112,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 			}
 
 			var err error
-			more, err = p.addItems(ctx, items, c, id, q, opts)
+			more, err = p.addItems(ctx, cfg, items, id, query)
 			if err != nil {
 				return err
 			}
@@ -177,7 +121,7 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 					return err
 				}
 			}
-			q = q.NextPage()
+			query = query.NextPage()
 		}
 
 		if err := flush(id); err != nil {
@@ -189,9 +133,12 @@ func (p PublishSignals) Do(ctx context.Context, c *clarify.Client, opts PublishO
 }
 
 // addItems adds items that require update to dest from all signals matching
-// the integration ID and query q.
-func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.ItemSave, c *clarify.Client, integrationID string, q params.ResourceQuery, opts PublishOptions) (bool, error) {
-	results, err := c.Admin().SelectSignals(integrationID, q).Include("item").Do(ctx)
+// the integration ID and query.
+func (p PublishSignals) addItems(ctx context.Context, cfg *Config, dest map[string]views.ItemSave, integrationID string, query fields.ResourceQuery) (bool, error) {
+	logger := cfg.Logger()
+	client := cfg.Client()
+
+	results, err := client.Admin().SelectSignals(integrationID, query).Include("item").Do(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -210,9 +157,11 @@ func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.Item
 		ok = ok && prevItem.Meta.Annotations.Get(AnnotationPublisherTransformVersion) == p.TransformVersion
 		ok = ok && prevItem.Meta.Annotations.Get(AnnotationPublisherSignalAttributes) == signal.Meta.AttributesHash.String()
 		if ok {
-			if opts.Verbose {
-				opts.Printf("Skip signal %s: item is up-to-date\n", signal.ID)
-			}
+			logger.LogAttrs(
+				ctx, slog.LevelDebug, "Item is up-to-date",
+				slog.String("signal_id", signal.ID),
+				slog.String("item_id", signal.Relationships.Item.Data.ID),
+			)
 			continue
 		}
 
@@ -231,7 +180,7 @@ func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.Item
 
 		// After running configured transformations, set automation package
 		// annotations.
-		item.Annotations.Set(AnnotationPublisherName, opts.Publisher)
+		item.Annotations.Set(AnnotationPublisherName, cfg.AppName())
 		item.Annotations.Set(AnnotationPublisherTransformVersion, p.TransformVersion)
 		item.Annotations.Set(AnnotationPublisherSignalAttributes, signal.Meta.AttributesHash.String())
 		item.Annotations.Set(AnnotationPublisherSignalID, signal.ID)
@@ -243,13 +192,12 @@ func (p PublishSignals) addItems(ctx context.Context, dest map[string]views.Item
 	if results.Meta.Total >= 0 {
 		// More can be calculated exactly when the total count was requested (or
 		// calculated for free by the backend).
-		more = q.GetSkip()+len(results.Data) < results.Meta.Total
+		more = query.GetSkip()+len(results.Data) < results.Meta.Total
 	} else {
 		// Fallback to approximate the more value when total was not explicitly
 		// requested. For large values of q.Limit, this approximation is likely
 		// faster -- on average -- then to request a total count.
-		more = (len(results.Data) == q.GetLimit())
+		more = (len(results.Data) == query.GetLimit())
 	}
 	return more, nil
-
 }
