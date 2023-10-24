@@ -24,7 +24,7 @@ import (
 )
 
 func TestOriginTime(t *testing.T) {
-	expectTime := time.Date(2000, 01, 03, 0, 0, 0, 0, time.UTC)
+	expectTime := time.Date(2000, 0o1, 0o3, 0, 0, 0, 0, time.UTC)
 	if result := fields.OriginTime.Time(); !result.Equal(expectTime) {
 		t.Errorf("expected OriginZeroTime.Time() equal %v, got %v", expectTime, result)
 	}
@@ -34,7 +34,7 @@ func TestOriginTime(t *testing.T) {
 }
 
 func TestZeroTime(t *testing.T) {
-	expectTime := time.Date(1970, 01, 01, 0, 0, 0, 0, time.UTC)
+	expectTime := time.Date(1970, 0o1, 0o1, 0, 0, 0, 0, time.UTC)
 	if result := fields.Timestamp(0).Time(); !result.Equal(expectTime) {
 		t.Errorf("expected Timestamp(0).Time() equal %v, got %v", expectTime, result)
 	}
@@ -89,7 +89,7 @@ func TestTimestampTruncate(t *testing.T) {
 }
 
 func FuzzTimestampTruncate(f *testing.F) {
-	//origTime := time.Date(2000, 01, 03, 0, 0, 0, 0, time.UTC)
+	// origTime := time.Date(2000, 01, 03, 0, 0, 0, 0, time.UTC)
 	f.Fuzz(func(t *testing.T, msec, dMsec int64) {
 		ts := fields.Timestamp(msec)
 		d := time.Duration(dMsec) * time.Microsecond
