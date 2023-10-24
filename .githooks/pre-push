@@ -5,5 +5,6 @@ set -ex
 command -v git-lfs >/dev/null 2>&1 || { echo >&2 "\nThis repository is configured for Git LFS but 'git-lfs' was not found on your path.\n"; exit 2; }
 git lfs pre-push "$@"
 
+golangci-lint run --new-from-rev=origin/main ./...
 go build -v ./...
 go test ./... -failfast
