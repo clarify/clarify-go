@@ -17,3 +17,4 @@
 # Clarify credentials.
 clarify-credentials*.json
 
+examples/devdata_cli/devdata_cli
