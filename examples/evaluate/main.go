@@ -7,7 +7,7 @@ import (
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 )
 
 func main() {
@@ -24,12 +24,12 @@ func main() {
 	t1 := time.Now().Add(-24 * time.Hour)
 	t2 := time.Now().Add(24 * time.Hour)
 
-	query := params.Query().
-		Where(params.CompareField("annotations.clarify/clarify-go/example/name", params.Equal("publish_signals"))).
+	query := fields.Query().
+		Where(fields.CompareField("annotations.clarify/clarify-go/example/name", fields.Equal("publish_signals"))).
 		Limit(1)
 
-	data := params.Data().
-		Where(params.TimeRange(t1, t2)).
+	data := fields.Data().
+		Where(fields.TimeRange(t1, t2)).
 		RollupDuration(time.Hour, time.Monday)
 
 	// Fetch an item for use in evaluate.
@@ -40,10 +40,10 @@ func main() {
 	if len(selection.Data) == 0 {
 		panic("this example require your organization to expose at least one item")
 	}
-	items := []params.ItemAggregation{
-		{Alias: "i1", ID: selection.Data[0].ID, Aggregation: params.AggregateAvg},
+	items := []fields.ItemAggregation{
+		{Alias: "i1", ID: selection.Data[0].ID, Aggregation: fields.AggregateAvg},
 	}
-	calculations := []params.Calculation{
+	calculations := []fields.Calculation{
 		{Alias: "c1", Formula: "sin(a)"},
 		{Alias: "c2", Formula: "sin(2*PI*time_seconds/3600)"},
 		{Alias: "c3", Formula: "max(c1,c2)"},

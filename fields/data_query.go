@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package params
+package fields
 
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/clarify/clarify-go/fields"
 )
 
 type dataQuery struct {
@@ -30,7 +28,7 @@ type dataQuery struct {
 	TimeZone       string     `json:"timeZone,omitempty"`
 }
 
-// DataQuery holds a data params. Although it does not expose any fields, the
+// DataQuery holds a data fields. Although it does not expose any fields, the
 // type can be decoded from and encoded to JSON.
 type DataQuery struct {
 	query dataQuery
@@ -74,7 +72,7 @@ func (dq DataQuery) RollupWindow() DataQuery {
 // time-zone for the first date in 2000 where the weekday matches the
 // firstDayOfWeek parameter.
 func (dq DataQuery) RollupDuration(d time.Duration, firstDayOfWeek time.Weekday) DataQuery {
-	dq.query.Rollup = fields.AsFixedDurationNullZero(d).String()
+	dq.query.Rollup = AsFixedDurationNullZero(d).String()
 	isoDay := int(firstDayOfWeek) % 7
 	if isoDay == 0 {
 		isoDay = 7
@@ -88,7 +86,7 @@ func (dq DataQuery) RollupDuration(d time.Duration, firstDayOfWeek time.Weekday)
 // The default bucket origin is set to time 00:00:00 according to the query
 // time-zone for January 1 year 2000.
 func (dq DataQuery) RollupMonths(months int) DataQuery {
-	dq.query.Rollup = fields.CalendarDurationNullZero{Months: months}.String()
+	dq.query.Rollup = MonthDurationNullZero(months).String()
 	return dq
 }
 
