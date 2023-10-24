@@ -6,7 +6,7 @@ import (
 	"os"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 )
 
 func main() {
@@ -20,8 +20,8 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	query := params.Query().
-		Where(params.Comparisons{"annotations.clarify/clarify-go/example/name": params.Equal("publish_signals")}).
+	query := fields.Query().
+		Where(fields.Comparisons{"annotations.clarify/clarify-go/example/name": fields.Equal("publish_signals")}).
 		Limit(10)
 
 	result, err := client.Clarify().SelectItems(query).Do(ctx)
