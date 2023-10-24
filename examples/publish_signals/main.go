@@ -61,9 +61,7 @@ func main() {
 			transformLabelValuesToTitle,
 		},
 	}
-	if err := routine.Do(ctx, client, automation.PublishOptions{
-		Publisher: exampleName,
-	}); err != nil {
+	if err := routine.Do(ctx, automation.NewConfig(client)); err != nil {
 		log.Fatalf("fatal: %v", err)
 	}
 }
