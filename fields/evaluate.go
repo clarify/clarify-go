@@ -98,10 +98,12 @@ func (m *AggregateMethod) UnmarshalText(data []byte) error {
 }
 
 type ItemAggregation struct {
-	Alias       string          `json:"alias"`
-	ID          string          `json:"id"`
-	Aggregation AggregateMethod `json:"aggregation"`
+	Alias       string          `json:"alias,omitempty"`
+	ID          string          `json:"id,omitempty"`
+	Aggregation AggregateMethod `json:"aggregation,omitempty"`
 	State       int             `json:"state"`
+	Lead        int             `json:"lead,omitempty"`
+	Lag         int             `json:"lag,omitempty"`
 }
 
 var _ json.Marshaler = ItemAggregation{}
@@ -114,10 +116,12 @@ func (ia ItemAggregation) MarshalJSON() ([]byte, error) {
 		v = encType(ia)
 	default:
 		type encType struct {
-			Alias       string          `json:"alias"`
-			ID          string          `json:"id"`
-			Aggregation AggregateMethod `json:"aggregation"`
+			Alias       string          `json:"alias,omitempty"`
+			ID          string          `json:"id,omitempty"`
+			Aggregation AggregateMethod `json:"aggregation,omitempty"`
 			State       int             `json:"-"`
+			Lead        int             `json:"lead,omitempty"`
+			Lag         int             `json:"lag,omitempty"`
 		}
 		v = encType(ia)
 	}
