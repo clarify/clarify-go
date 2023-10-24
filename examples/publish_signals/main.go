@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 	"strings"
 
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/automation"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -46,15 +45,15 @@ func main() {
 	ctx := context.Background()
 	client := creds.Client(ctx)
 
-	rule := automation.PublishSignals{
+	routine := automation.PublishSignals{
 		// For this example, the signals we want to publish are created by the same
 		// integration that we are using to select them. Note that this isn't a
 		// requirement; for production cases, you may want this integration ID to be
 		// configured to be something else.
 		Integrations: []string{creds.Integration},
-		SignalsFilter: params.Comparisons{
-			"annotations." + keyExampleName:    params.Equal(exampleName),
-			"annotations." + keyExamplePublish: params.Equal(annotationTrue),
+		SignalsFilter: fields.Comparisons{
+			"annotations." + keyExampleName:    fields.Equal(exampleName),
+			"annotations." + keyExamplePublish: fields.Equal(annotationTrue),
 		},
 		TransformVersion: transformVersion,
 		Transforms: []func(item *views.ItemSave){
@@ -62,10 +61,9 @@ func main() {
 			transformLabelValuesToTitle,
 		},
 	}
-	if err := rule.Do(ctx, client, automation.PublishOptions{LogOptions: automation.LogOptions{
-		Verbose: true,
-		Out:     os.Stderr,
-	}}); err != nil {
+	if err := routine.Do(ctx, client, automation.PublishOptions{
+		Publisher: exampleName,
+	}); err != nil {
 		log.Fatalf("fatal: %v", err)
 	}
 }

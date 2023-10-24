@@ -7,7 +7,7 @@ import (
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 )
 
 func main() {
@@ -24,12 +24,12 @@ func main() {
 	t1 := time.Now().Add(-24 * time.Hour)
 	t2 := time.Now().Add(24 * time.Hour)
 
-	query := params.Query().
-		Where(params.CompareField("annotations.clarify/clarify-go/example/name", params.Equal("publish_signals"))).
+	query := fields.Query().
+		Where(fields.CompareField("annotations.clarify/clarify-go/example/name", fields.Equal("publish_signals"))).
 		Limit(10)
 
-	data := params.Data().
-		Where(params.TimeRange(t1, t2)).
+	data := fields.Data().
+		Where(fields.TimeRange(t1, t2)).
 		RollupDuration(time.Hour, time.Monday)
 
 	result, err := client.Clarify().DataFrame(query, data).Do(ctx)

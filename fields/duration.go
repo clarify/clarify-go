@@ -45,8 +45,29 @@ var (
 	_ json.Unmarshaler = (*CalendarDurationNullZero)(nil)
 )
 
+// FixedCalendarDurationNullZero returns a calendar duration that spans a fixed
+// duration. If d is zero, the returned duration would JSON-encode to null.
+func FixedCalendarDurationNullZero(d time.Duration) CalendarDuration {
+	return CalendarDuration{duration: d}
+}
+
+// MonthDurationNullZero returns a calendar duration that spans a given number
+// of months. If m is zero, the returned duration would JSON-encode to null.
+func MonthDurationNullZero(m int) CalendarDurationNullZero {
+	return CalendarDurationNullZero{months: m}
+}
+
 func (cd CalendarDurationNullZero) IsZero() bool {
 	return CalendarDuration(cd).IsZero()
+}
+
+// AddToTime adds the duration to the passed in time.
+func (cd CalendarDurationNullZero) AddToTime(t time.Time) time.Time {
+	return CalendarDuration(cd).AddToTime(t)
+}
+
+func (cd CalendarDurationNullZero) AddToTimestamp(t Timestamp, loc *time.Location) Timestamp {
+	return CalendarDuration(cd).AddToTimestamp(t, loc)
 }
 
 func (cd CalendarDurationNullZero) String() string {
@@ -58,8 +79,8 @@ func (cd CalendarDurationNullZero) String() string {
 
 func (cd *CalendarDurationNullZero) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, []byte(`null`)) {
-		cd.Duration = 0
-		cd.Months = 0
+		cd.duration = 0
+		cd.months = 0
 		return nil
 	}
 	var s string
@@ -76,7 +97,7 @@ func (cd *CalendarDurationNullZero) UnmarshalJSON(data []byte) error {
 }
 
 func (cd CalendarDurationNullZero) MarshalJSON() ([]byte, error) {
-	if cd.Duration == 0 && cd.Months == 0 {
+	if cd.IsZero() {
 		return []byte(`null`), nil
 	}
 	s, err := formatCalendarDuration(CalendarDuration(cd))
@@ -87,11 +108,11 @@ func (cd CalendarDurationNullZero) MarshalJSON() ([]byte, error) {
 }
 
 // CalendarDuration allows encoding either a fixed duration or a monthly
-// duration. Setting both a month and a duration value is regarded as an error, and
-// will fail to encoded.
+// duration as an RFC 3339 duration. Combining months and a fixed duration is
+// not allowed.
 type CalendarDuration struct {
-	Months   int
-	Duration time.Duration
+	months   int
+	duration time.Duration
 }
 
 var (
@@ -102,16 +123,57 @@ var (
 
 // MonthDuration returns a duration that spans a given number of months.
 func MonthDuration(m int) CalendarDuration {
-	return CalendarDuration{Months: m}
+	return CalendarDuration{months: m}
+}
+
+// FixedCalendarDuration returns a duration that spans a fixed duration.
+func FixedCalendarDuration(d time.Duration) CalendarDuration {
+	return CalendarDuration{duration: d}
+}
+
+func (cd CalendarDuration) Months() int {
+	return cd.months
+}
+
+func (cd CalendarDuration) Duration() time.Duration {
+	return cd.duration
 }
 
 func (cd CalendarDuration) IsZero() bool {
-	return cd.Duration == 0 && cd.Months == 0
+	return cd.duration == 0 && cd.months == 0
 }
 
-func (cd CalendarDuration) String() string {
-	res, _ := formatCalendarDuration(cd)
-	return res
+func (cd CalendarDuration) AddToTime(t time.Time) time.Time {
+	if cd.months != 0 {
+		t = t.AddDate(0, cd.months, 0)
+	}
+	if cd.duration != 0 {
+		t = t.Add(cd.duration)
+	}
+	return t
+}
+
+func (cd CalendarDuration) AddToTimestamp(t Timestamp, loc *time.Location) Timestamp {
+	if cd.months != 0 {
+		t = AsTimestamp(t.Time().In(loc).AddDate(0, cd.months, 0))
+	}
+	if cd.duration != 0 {
+		return t + Timestamp(cd.duration/1e3)
+	}
+	return t
+}
+
+func (cd *CalendarDuration) UnmarshalText(b []byte) error {
+	_cd, ok := parseYearToFraction(string(b))
+	if !ok {
+		return ErrBadCalendarDuration
+	}
+	if _cd.duration != 0 && _cd.months != 0 {
+		return ErrMixedCalendarDuration
+	}
+	cd.months = _cd.months
+	cd.duration = _cd.duration
+	return nil
 }
 
 func (dd CalendarDuration) MarshalText() ([]byte, error) {
@@ -122,14 +184,9 @@ func (dd CalendarDuration) MarshalText() ([]byte, error) {
 	return []byte(s), nil
 }
 
-func (cd *CalendarDuration) UnmarshalText(b []byte) error {
-	_cd, ok := parseYearToFraction(string(b))
-	if !ok {
-		return fmt.Errorf("json: %w", ErrBadCalendarDuration)
-	}
-	cd.Months = _cd.Months
-	cd.Duration = _cd.Duration
-	return nil
+func (cd CalendarDuration) String() string {
+	res, _ := formatCalendarDuration(cd)
+	return res
 }
 
 // ParseCalendarDuration converts text-encoded RFC 3339 duration to its
@@ -145,10 +202,10 @@ func ParseCalendarDuration(s string) (CalendarDuration, error) {
 func formatCalendarDuration(dd CalendarDuration) (string, error) {
 	var s string
 	switch {
-	case dd.Months != 0 && dd.Duration != 0:
+	case dd.months != 0 && dd.duration != 0:
 		return "", fmt.Errorf("can't specify both months and duration")
-	case dd.Months != 0:
-		m := dd.Months
+	case dd.months != 0:
+		m := dd.months
 		if m < 0 {
 			s = "-P"
 			m = -m
@@ -162,8 +219,8 @@ func formatCalendarDuration(dd CalendarDuration) (string, error) {
 		if m > 0 {
 			s += fmt.Sprintf("%dM", m)
 		}
-	case dd.Duration != 0:
-		s = formatFixedDuration(dd.Duration)
+	case dd.duration != 0:
+		s = formatFixedDuration(dd.duration)
 	default:
 		s = "PT0S"
 	}
@@ -191,25 +248,25 @@ func parseYearToFraction(s string) (CalendarDuration, bool) {
 			sign = -1
 		case "years":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Months += 12 * int(di)
+			dd.months += 12 * int(di)
 		case "months":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Months += int(di)
+			dd.months += int(di)
 		case "weeks":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Duration += time.Duration(di) * 7 * 24 * time.Hour
+			dd.duration += time.Duration(di) * 7 * 24 * time.Hour
 		case "days":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Duration += time.Duration(di) * 24 * time.Hour
+			dd.duration += time.Duration(di) * 24 * time.Hour
 		case "hours":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Duration += time.Duration(di) * time.Hour
+			dd.duration += time.Duration(di) * time.Hour
 		case "minutes":
 			di, err = strconv.ParseInt(matches[i], 10, 64)
-			dd.Duration += time.Duration(di) * time.Minute
+			dd.duration += time.Duration(di) * time.Minute
 		case "fractions":
 			df, err = strconv.ParseFloat(matches[i], 64)
-			dd.Duration += time.Duration(df * float64(time.Second))
+			dd.duration += time.Duration(df * float64(time.Second))
 		}
 		if err != nil {
 			// If this happens, it's a programming error that must be corrected;
@@ -221,8 +278,8 @@ func parseYearToFraction(s string) (CalendarDuration, bool) {
 		return dd, false
 	}
 
-	dd.Duration *= time.Duration(sign)
-	dd.Months *= sign
+	dd.duration *= time.Duration(sign)
+	dd.months *= sign
 	return dd, true
 }
 

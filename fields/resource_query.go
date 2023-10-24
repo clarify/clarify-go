@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package params
+package fields
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ type resourceQuery struct {
 	Total  bool           `json:"total"`
 }
 
-// ResourceQuery holds a resource params. Although it does not expose any
+// ResourceQuery holds a resource fields. Although it does not expose any
 // fields, the type can be decoded from and encoded to JSON.
 type ResourceQuery struct {
 	limitSet bool
@@ -84,7 +84,7 @@ func (q ResourceQuery) Sort(fields ...string) ResourceQuery {
 	return q
 }
 
-// Skip returns a query that skips the first n entries matching the params.
+// Skip returns a query that skips the first n entries matching the fields.
 func (q ResourceQuery) Skip(n int) ResourceQuery {
 	q.query.Skip = n
 	return q

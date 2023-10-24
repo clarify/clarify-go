@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package params_test
+package fields_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 )
 
 func TestFilter(t *testing.T) {
-	testStringer := func(f params.ResourceFilter, expect string) func(t *testing.T) {
+	testStringer := func(f fields.ResourceFilter, expect string) func(t *testing.T) {
 		return func(t *testing.T) {
 			t.Helper()
 			if result := fmt.Sprint(f); result != expect {
-				t.Errorf("unexpected params.String() value:\n got: %s\nwant: %s",
+				t.Errorf("unexpected fields.String() value:\n got: %s\nwant: %s",
 					result,
 					expect,
 				)
@@ -35,19 +35,19 @@ func TestFilter(t *testing.T) {
 	}
 
 	t.Run(`queryAll()`, testStringer(
-		params.FilterAll(),
+		fields.FilterAll(),
 		`{}`,
 	))
-	t.Run(`params.And(params.All(),params.Field("id",params.Equal("a")))`, testStringer(
-		params.And(params.FilterAll(), params.CompareField("id", params.Equal("a"))),
-		`{"id":{"$in":["a"]}}`, // Optimized to skip All params.
+	t.Run(`fields.And(fields.All(),fields.Field("id",fields.Equal("a")))`, testStringer(
+		fields.And(fields.FilterAll(), fields.CompareField("id", fields.Equal("a"))),
+		`{"id":{"$in":["a"]}}`, // Optimized to skip All fields.
 	))
-	t.Run(`params.And(params.All(),params.Field("id",params.In("a","b")))`, testStringer(
-		params.And(params.FilterAll(), params.CompareField("id", params.In("a", "b"))),
-		`{"id":{"$in":["a","b"]}}`, // Optimized to skip All params.
+	t.Run(`fields.And(fields.All(),fields.Field("id",fields.In("a","b")))`, testStringer(
+		fields.And(fields.FilterAll(), fields.CompareField("id", fields.In("a", "b"))),
+		`{"id":{"$in":["a","b"]}}`, // Optimized to skip All fields.
 	))
-	t.Run(`params.Or(params.All(),params.Field("id",params.Equal("a")))`, testStringer(
-		params.Or(params.FilterAll(), params.CompareField("id", params.Equal("a"))),
+	t.Run(`fields.Or(fields.All(),fields.Field("id",fields.Equal("a")))`, testStringer(
+		fields.Or(fields.FilterAll(), fields.CompareField("id", fields.Equal("a"))),
 		`{}`, // Optimized to empty query (match all).
 	))
 }

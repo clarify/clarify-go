@@ -31,8 +31,22 @@ type DataFrameInclude struct {
 // a floating point value.
 type DataSeries map[fields.Timestamp]float64
 
+// Timestamps returns an ordered set of all timestamps in the data-series where
+// there is at least one NaN value.
+func (s DataSeries) Timestamps() []fields.Timestamp {
+	ordered := make([]fields.Timestamp, 0, len(s))
+	for t, v := range s {
+		if math.IsNaN(v) {
+			continue
+		}
+		ordered = append(ordered, t)
+	}
+	slices.Sort(ordered)
+	return ordered
+}
+
 // DataFrame provides JSON encoding and decoding for a map of series identified
-// by an arbitrary key.
+// by a series key.
 type DataFrame map[string]DataSeries
 
 var (
@@ -40,24 +54,31 @@ var (
 	_ json.Unmarshaler = (*DataFrame)(nil)
 )
 
+// Timestamps returns an ordered set of all timestamps in the data-frame where
+// there is at least one non-empty (not NaN) value.
+func (df DataFrame) Timestamps() []fields.Timestamp {
+	m := make(map[fields.Timestamp]struct{})
+	for _, s := range df {
+		for t, v := range s {
+			if math.IsNaN(v) {
+				continue
+			}
+			m[t] = struct{}{}
+		}
+	}
+	ordered := make([]fields.Timestamp, 0, len(m))
+	for t := range m {
+		ordered = append(ordered, t)
+	}
+	slices.Sort(ordered)
+	return ordered
+}
+
 // ordered returns a valid and ordered RawDataFrame with duplicated entries
 // removed.
 func (df DataFrame) ordered() rawDataFrame {
-	times := map[fields.Timestamp]struct{}{}
-	for _, series := range df {
-		for ts := range series {
-			times[ts] = struct{}{}
-		}
-	}
-
-	ordered := make([]fields.Timestamp, 0, len(times))
-	for ts := range times {
-		ordered = append(ordered, ts)
-	}
-	slices.Sort(ordered)
-
 	out := rawDataFrame{
-		Times:  ordered,
+		Times:  df.Timestamps(),
 		Series: make(map[string][]fields.Number, len(df)),
 	}
 	for sid, series := range df {

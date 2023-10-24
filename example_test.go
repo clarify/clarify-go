@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go"
-	"github.com/clarify/clarify-go/params"
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/testdata"
 )
 
@@ -41,8 +41,8 @@ func ExampleAdminNamespace_SelectSignals() {
 	ctx := context.Background()
 
 	res, err := c.Admin().SelectSignals(integrationID,
-		params.Query().Where(
-			params.CompareField("id", params.In("c8keagasahsp3cpvma20", "c8l8bc2sahsgjg5cckcg")),
+		fields.Query().Where(
+			fields.CompareField("id", fields.In("c8keagasahsp3cpvma20", "c8l8bc2sahsgjg5cckcg")),
 		).Limit(1),
 	).Include("items").Do(ctx)
 
@@ -89,12 +89,12 @@ func ExampleClarifyNamespace_DataFrame() {
 	ctx := context.Background()
 
 	res, err := c.Clarify().DataFrame(
-		params.Query().Where(
-			params.CompareField("id", params.In("c8keagasahsp3cpvma20")),
+		fields.Query().Where(
+			fields.CompareField("id", fields.In("c8keagasahsp3cpvma20")),
 		).Limit(1),
 
-		params.Data().Where(
-			params.TimeRange(
+		fields.Data().Where(
+			fields.TimeRange(
 				time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
 				time.Date(2022, 1, 1, 4, 0, 0, 0, time.UTC),
 			),
