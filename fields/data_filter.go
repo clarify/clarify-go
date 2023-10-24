@@ -47,7 +47,7 @@ func DataAnd(filters ...DataFilter) DataFilter {
 		// Use greatest non-zero times.$gte value.
 		switch {
 		case f.filter.Times.GreaterOrEqual.IsZero():
-			//pass
+			// pass
 		case result.filter.Times.GreaterOrEqual.IsZero(), f.filter.Times.GreaterOrEqual.After(result.filter.Times.GreaterOrEqual):
 			result.filter.Times.GreaterOrEqual = f.filter.Times.GreaterOrEqual
 		}
