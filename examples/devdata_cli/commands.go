@@ -32,7 +32,6 @@ import (
 	clarify "github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/jsonrpc"
-	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -360,9 +359,9 @@ func (p *program) selectSignals(ctx context.Context, config selectSignalsConfig)
 		config.integration = p.defaultIntegration
 	}
 
-	q := params.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
+	q := fields.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
 	if config.filter != "" {
-		var f params.ResourceFilter
+		var f fields.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
@@ -426,16 +425,16 @@ func (p *program) publishSignals(ctx context.Context, config publishSignalsConfi
 	keySignalAttributesHash := config.annotationPrefix + "source/signal-attributes-hash"
 	keySignalID := config.annotationPrefix + "source/signal-id"
 
-	q := params.Query().
-		Where(params.Comparisons{
-			"annotations." + keyPublish: params.Equal("true"),
+	q := fields.Query().
+		Where(fields.Comparisons{
+			"annotations." + keyPublish: fields.Equal("true"),
 		}).
 		Skip(config.skip).
 		Limit(config.limit).
 		Sort(config.sort...)
 
 	if config.filter != "" {
-		var f params.ResourceFilter
+		var f fields.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
@@ -533,9 +532,9 @@ func (p *program) selectItemsCommand() *ffcli.Command {
 }
 
 func (p *program) selectItems(ctx context.Context, config selectItemsConfig) error {
-	q := params.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
+	q := fields.Query().Skip(config.skip).Limit(config.limit).Sort(config.sort...)
 	if config.filter != "" {
-		var f params.ResourceFilter
+		var f fields.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
@@ -551,12 +550,12 @@ func (p *program) selectItems(ctx context.Context, config selectItemsConfig) err
 }
 
 type dataFrameConfig struct {
-	// Item params.
+	// Item fields.
 	skip, limit int
 	filter      string
 	sort        []string
 
-	// Data params.
+	// Data fields.
 	startTime, endTime time.Time
 	rollupDuration     time.Duration
 	rollupMonths       int
@@ -576,13 +575,13 @@ func (p *program) dataFrameCommand() *ffcli.Command {
 
 	fs := flag.NewFlagSet("devdata_cli data-frame", flag.ExitOnError)
 
-	// Item params.
+	// Item fields.
 	fs.IntVar(&config.skip, "s", 0, "Number of items to skip.")
 	fs.IntVar(&config.limit, "n", 50, "Maximum number of items to return.")
 	fs.StringVar(&config.filter, "filter", "", "Resource filter (JSON).")
 	fs.Var(stringSlice{target: &config.sort}, "sort", "Comma-separated list of fields to sort the result by.")
 
-	// Data params.
+	// Data fields.
 	fs.Var(timeFlag{target: &config.startTime}, "start-time", "RFC 3339 timestamp of first data-point to include.")
 	fs.Var(timeFlag{target: &config.endTime}, "end-time", "RFC 3339 timestamp of first data-point not to include.")
 	fs.BoolVar(&config.rollupWindow, "rollup-window", false, "Use window rollup.")
@@ -607,21 +606,21 @@ func (p *program) dataFrameCommand() *ffcli.Command {
 }
 
 func (p *program) dataFrame(ctx context.Context, config dataFrameConfig) error {
-	query := params.Query().
+	query := fields.Query().
 		Skip(config.skip).
 		Limit(config.limit).
 		Sort(config.sort...)
 
 	if config.filter != "" {
-		var f params.ResourceFilter
+		var f fields.ResourceFilter
 		if err := json.Unmarshal([]byte(config.filter), &f); err != nil {
 			return fmt.Errorf("-filter: %w", err)
 		}
 		query = query.Where(f)
 	}
 
-	data := params.Data().
-		Where(params.TimeRange(config.startTime, config.endTime))
+	data := fields.Data().
+		Where(fields.TimeRange(config.startTime, config.endTime))
 
 	switch {
 	case config.rollupWindow:
@@ -674,7 +673,7 @@ type evaluateConfig struct {
 	items        string
 	calculations string
 
-	// Data params.
+	// Data fields.
 	startTime, endTime time.Time
 	rollupDuration     time.Duration
 	rollupMonths       int
@@ -698,7 +697,7 @@ func (p *program) evaluateCommand() *ffcli.Command {
 	fs.StringVar(&config.items, "items", "[]", "Items (JSON array).")
 	fs.StringVar(&config.calculations, "calculations", "[]", "Calculations (JSON array).")
 
-	// Data params.
+	// Data fields.
 	fs.Var(timeFlag{target: &config.startTime}, "start-time", "RFC 3339 timestamp of first data-point to include.")
 	fs.Var(timeFlag{target: &config.endTime}, "end-time", "RFC 3339 timestamp of first data-point not to include.")
 	fs.BoolVar(&config.rollupWindow, "rollup-window", false, "Use window rollup.")
@@ -723,17 +722,17 @@ func (p *program) evaluateCommand() *ffcli.Command {
 }
 
 func (p *program) evaluate(ctx context.Context, config evaluateConfig) error {
-	var items []params.ItemAggregation
+	var items []fields.ItemAggregation
 	if err := json.Unmarshal([]byte(config.items), &items); err != nil {
 		return fmt.Errorf("-items: %w", err)
 	}
-	var calculations []params.Calculation
+	var calculations []fields.Calculation
 	if err := json.Unmarshal([]byte(config.calculations), &calculations); err != nil {
 		return fmt.Errorf("-calculations: %w", err)
 	}
 
-	data := params.Data().
-		Where(params.TimeRange(config.startTime, config.endTime))
+	data := fields.Data().
+		Where(fields.TimeRange(config.startTime, config.endTime))
 
 	switch {
 	case config.rollupWindow:

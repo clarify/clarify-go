@@ -16,8 +16,9 @@ package fields
 
 // Parsing errors.
 const (
-	ErrBadCalendarDuration strError = "must be RFC 3339 duration in range year to fraction"
-	ErrBadFixedDuration    strError = "must be RFC 3339 duration in range week to fraction"
+	ErrBadCalendarDuration   strError = "must be RFC 3339 duration in range year to fraction"
+	ErrMixedCalendarDuration strError = "can not combine month or year components with day or time components"
+	ErrBadFixedDuration      strError = "must be RFC 3339 duration in range week to fraction"
 )
 
 type strError string

@@ -15,22 +15,22 @@
 package clarify
 
 import (
+	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/internal/request"
 	"github.com/clarify/clarify-go/jsonrpc"
-	"github.com/clarify/clarify-go/params"
 	"github.com/clarify/clarify-go/views"
 )
 
 const (
 	apiVersion                            = "1.1"
-	paramCalculations   jsonrpc.ParamName = "calculations"
-	paramData           jsonrpc.ParamName = "data"
-	paramFormat         jsonrpc.ParamName = "format"
 	paramIntegration    jsonrpc.ParamName = "integration"
-	paramItems          jsonrpc.ParamName = "items"
+	paramData           jsonrpc.ParamName = "data"
+	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
 	paramItemsBySignal  jsonrpc.ParamName = "itemsBySignal"
 	paramQuery          jsonrpc.ParamName = "query"
-	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
+	paramItems          jsonrpc.ParamName = "items"
+	paramCalculations   jsonrpc.ParamName = "calculations"
+	paramFormat         jsonrpc.ParamName = "format"
 )
 
 // Client allows calling JSON RPC methods against Clarify.
@@ -147,7 +147,7 @@ type AdminNamespace struct {
 
 // SelectSignals returns a new request for querying signals and related
 // resources.
-func (ns AdminNamespace) SelectSignals(integration string, q params.ResourceQuery) SelectSignalsRequest {
+func (ns AdminNamespace) SelectSignals(integration string, q fields.ResourceQuery) SelectSignalsRequest {
 	return methodSelectSignals.NewRequest(ns.h,
 		paramIntegration.Value(integration),
 		paramQuery.Value(q),
@@ -203,7 +203,7 @@ type ClarifyNamespace struct {
 }
 
 // SelectItems returns a request for querying items.
-func (ns ClarifyNamespace) SelectItems(q params.ResourceQuery) SelectItemsRequest {
+func (ns ClarifyNamespace) SelectItems(q fields.ResourceQuery) SelectItemsRequest {
 	return methodSelectItems.NewRequest(ns.h,
 		paramQuery.Value(q),
 		paramFormat.Value(views.SelectionFormat{
@@ -233,7 +233,7 @@ var methodSelectItems = request.RelationalMethod[SelectItemsResult]{
 // aggregation values (count, min, max, sum, avg) for numeric items and a state
 // histogram aggregation in seconds (duration spent in each state per bucket)
 // for enum items.
-func (ns ClarifyNamespace) DataFrame(items params.ResourceQuery, data params.DataQuery) DataFrameRequest {
+func (ns ClarifyNamespace) DataFrame(items fields.ResourceQuery, data fields.DataQuery) DataFrameRequest {
 	return methodDataFrame.NewRequest(ns.h,
 		paramQuery.Value(items),
 		paramData.Value(data),
@@ -255,7 +255,7 @@ var methodDataFrame = request.RelationalMethod[DataFrameResult]{
 
 // Evaluate returns a new request for retrieving aggregated data from Clarify
 // and perform calculations.
-func (ns ClarifyNamespace) Evaluate(items []params.ItemAggregation, calculations []params.Calculation, data params.DataQuery) EvaluateRequest {
+func (ns ClarifyNamespace) Evaluate(items []fields.ItemAggregation, calculations []fields.Calculation, data fields.DataQuery) EvaluateRequest {
 	return methodEvaluate.NewRequest(ns.h,
 		paramItems.Value(items),
 		paramCalculations.Value(calculations),
