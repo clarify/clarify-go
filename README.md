@@ -38,7 +38,7 @@ When access to the Clarify namespace is granted in Clarify (scoped to entire org
 
 ## Setting up automation routines
 
-To quickly set-up your own automation routines, you can get started with our [automation template repository](https://github.com/clarify/template-clarify-automation). This template let's you customize and build your own automation binary and easily run it inside GitHub Actions; no external hosting environment is required (unless you want to).
+By using our [automation](automation) and [automationcli](automation/automationcli) packages, you can quickly define a a tree-structure of _Routines_ that can be recognized and run by path-name. See the [automation_cli](examples/automation_cli/) example, or fork our [automation template repository](https://github.com/clarify/template-clarify-automation) to get started. This template let's you customize and build your own automation CLI and easily run it inside GitHub Actions; no external hosting environment is required (unless you want to).
 
 ## Copyright
 
