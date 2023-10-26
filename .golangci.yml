@@ -5,6 +5,7 @@ linters:
     - godot # Check if comments end in a period.
     - misspell # Finds commonly misspelled English words in comments.
     - goheader # Checks is file header matches pattern.
+    - gofumpt
 
 linters-settings:
   goheader:

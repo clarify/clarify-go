@@ -45,7 +45,7 @@ type Resource[A, R any] struct {
 var _ json.Marshaler = Resource[struct{}, struct{}]{}
 
 func (e Resource[A, R]) MarshalJSON() ([]byte, error) {
-	var target = struct {
+	target := struct {
 		Identifier
 		Meta          Meta            `json:"meta"`
 		Attributes    json.RawMessage `json:"attributes"`
