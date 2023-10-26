@@ -45,7 +45,6 @@ func ExampleAdminNamespace_SelectSignals() {
 			fields.CompareField("id", fields.In("c8keagasahsp3cpvma20", "c8l8bc2sahsgjg5cckcg")),
 		).Limit(1),
 	).Include("items").Do(ctx)
-
 	if err != nil {
 		fmt.Println("error:", err)
 		return
@@ -100,7 +99,6 @@ func ExampleClarifyNamespace_DataFrame() {
 			),
 		).RollupDuration(time.Hour, time.Monday),
 	).Include("items").Do(ctx)
-
 	if err != nil {
 		fmt.Println("error:", err)
 		return
