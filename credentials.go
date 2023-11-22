@@ -94,6 +94,12 @@ func CredentialsFromReader(r io.Reader) (*Credentials, error) {
 	return &creds, nil
 }
 
+// CredentialsFromString parse Clarify Credentials from the passed in JSON
+// string, and return either valid credentials or an error.
+func CredentialsFromString(s string) (*Credentials, error) {
+	return CredentialsFromReader(strings.NewReader(s))
+}
+
 // Validate returns an error if the credentials are invalid.
 func (creds *Credentials) Validate() error {
 	issues := map[string][]string{}
