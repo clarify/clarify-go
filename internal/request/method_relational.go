@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,5 +62,11 @@ func (req Relational[R]) Include(relationships ...string) Relational[R] {
 
 // Do performs the request against the server and returns the result.
 func (req Relational[R]) Do(ctx context.Context) (*R, error) {
-	return req.parent.do(ctx, includeParam.Value(req.include))
+	return req.do(ctx, includeParam.Value(req.include))
+}
+
+func (req Relational[R]) do(ctx context.Context, params ...jsonrpc.Param) (*R, error) {
+	arr := append(params, includeParam.Value(req.include))
+
+	return req.parent.do(ctx, arr...)
 }

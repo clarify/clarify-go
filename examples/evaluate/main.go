@@ -40,8 +40,8 @@ func main() {
 	if len(selection.Data) == 0 {
 		panic("this example require your organization to expose at least one item")
 	}
-	items := []fields.ItemAggregation{
-		{Alias: "i1", ID: selection.Data[0].ID, Aggregation: fields.AggregateAvg},
+	items := []fields.EvaluateItem{
+		{Alias: "i1", ID: selection.Data[0].ID, TimeAggregation: fields.TimeAggregationAvg},
 	}
 	calculations := []fields.Calculation{
 		{Alias: "c1", Formula: "sin(a)"},
@@ -49,7 +49,10 @@ func main() {
 		{Alias: "c3", Formula: "max(c1,c2)"},
 	}
 
-	result, err := client.Clarify().Evaluate(items, calculations, data).Do(ctx)
+	result, err := client.Clarify().Evaluate(data).
+		Items(items...).
+		Calculations(calculations...).
+		Do(ctx)
 	if err != nil {
 		panic(err)
 	}

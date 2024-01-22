@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Searis AS
+// Copyright 2022-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 package clarify
 
 import (
+	"context"
+
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/internal/request"
 	"github.com/clarify/clarify-go/jsonrpc"
@@ -29,6 +31,7 @@ const (
 	paramFormat         jsonrpc.ParamName = "format"
 	paramIntegration    jsonrpc.ParamName = "integration"
 	paramItems          jsonrpc.ParamName = "items"
+	paramGroups         jsonrpc.ParamName = "groups"
 	paramItemsBySignal  jsonrpc.ParamName = "itemsBySignal"
 	paramQuery          jsonrpc.ParamName = "query"
 	paramSignalsByInput jsonrpc.ParamName = "signalsByInput"
@@ -256,27 +259,72 @@ var methodDataFrame = request.RelationalMethod[DataFrameResult]{
 
 // Evaluate returns a new request for retrieving aggregated data from Clarify
 // and perform calculations.
-func (ns ClarifyNamespace) Evaluate(items []fields.ItemAggregation, calculations []fields.Calculation, data fields.DataQuery) EvaluateRequest {
-	return methodEvaluate.NewRequest(ns.h,
-		paramItems.Value(items),
-		paramCalculations.Value(calculations),
-		paramData.Value(data),
-		paramFormat.Value(views.SelectionFormat{
-			GroupIncludedByType: true,
-		}),
-	)
+func (ns ClarifyNamespace) Evaluate(data fields.DataQuery) EvaluateRequest {
+	return EvaluateRequest{
+		data: data,
+		h:    ns.h,
+	}
 }
 
-type (
-	// EvaluateRequest describe an initialized clarify.evaluate RPC request with
-	// access to a request handler.
-	EvaluateRequest = request.Relational[EvaluateResult]
+func (er EvaluateRequest) Items(items ...fields.EvaluateItem) EvaluateRequest {
+	newItems := make([]fields.EvaluateItem, len(er.items)+len(items))
+	newItems = append(append(newItems, er.items...), items...)
+	er.items = newItems
 
-	// EvaluateResult describe the result format for a EvaluateRequest.
-	EvaluateResult = views.Selection[views.DataFrame, views.DataFrameInclude]
-)
+	return er
+}
+
+func (er EvaluateRequest) Groups(groups ...fields.EvaluateGroup) EvaluateRequest {
+	newGroups := make([]fields.EvaluateGroup, len(er.groups)+len(groups))
+	newGroups = append(append(newGroups, er.groups...), groups...)
+	er.groups = newGroups
+
+	return er
+}
+
+func (er EvaluateRequest) Calculations(calculations ...fields.Calculation) EvaluateRequest {
+	newCalculations := make([]fields.Calculation, len(er.calculations)+len(calculations))
+	newCalculations = append(append(newCalculations, er.calculations...), calculations...)
+	er.calculations = newCalculations
+
+	return er
+}
+
+func (er EvaluateRequest) Include(relationships ...string) EvaluateRequest {
+	newRelationships := make([]string, len(er.relationships)+len(relationships))
+	newRelationships = append(append(newRelationships, er.relationships...), relationships...)
+	er.relationships = newRelationships
+
+	return er
+}
+
+func (er EvaluateRequest) Do(ctx context.Context) (*EvaluateResult, error) {
+	r := methodEvaluate.NewRequest(er.h,
+		paramData.Value(er.data),
+		paramItems.Value(er.items),
+		paramGroups.Value(er.groups),
+		paramCalculations.Value(er.calculations))
+
+	r.Include(er.relationships...)
+
+	return r.Do(ctx)
+}
+
+// EvaluateRequest describe an initialized clarify.evaluate RPC request with
+// access to a request handler.
+type EvaluateRequest struct {
+	data          fields.DataQuery
+	items         []fields.EvaluateItem
+	groups        []fields.EvaluateGroup
+	calculations  []fields.Calculation
+	relationships []string
+	h             jsonrpc.Handler
+}
+
+// EvaluateResult describe the result format for a EvaluateRequest.
+type EvaluateResult = views.Selection[views.DataFrame, views.DataFrameInclude]
 
 var methodEvaluate = request.RelationalMethod[EvaluateResult]{
-	APIVersion: apiVersion,
+	APIVersion: "1.2alpha1",
 	Method:     "clarify.evaluate",
 }
