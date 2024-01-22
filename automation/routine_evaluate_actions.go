@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 // well as annotations for passing on to actions.
 type Evaluation struct {
 	// Items lists item aggregations for items with known IDs.
-	Items []fields.ItemAggregation
+	Items []fields.EvaluateItem
 
 	// Calculations lists calculations to perform. A calculation can reference
 	// items or previous calculations.
@@ -75,7 +75,9 @@ func (e EvaluateActions) Do(ctx context.Context, cfg *Config) error {
 	}
 
 	selection, err := client.Clarify().
-		Evaluate(e.Evaluation.Items, e.Evaluation.Calculations, dataQuery).
+		Evaluate(dataQuery).
+		Items(e.Evaluation.Items...).
+		Calculations(e.Evaluation.Calculations...).
 		Do(ctx)
 	if err != nil {
 		return err

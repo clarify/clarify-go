@@ -722,7 +722,7 @@ func (p *program) evaluateCommand() *ffcli.Command {
 }
 
 func (p *program) evaluate(ctx context.Context, config evaluateConfig) error {
-	var items []fields.ItemAggregation
+	var items []fields.EvaluateItem
 	if err := json.Unmarshal([]byte(config.items), &items); err != nil {
 		return fmt.Errorf("-items: %w", err)
 	}
@@ -746,7 +746,9 @@ func (p *program) evaluate(ctx context.Context, config evaluateConfig) error {
 		data = data.Last(config.last)
 	}
 
-	req := p.client.Clarify().Evaluate(items, calculations, data)
+	req := p.client.Clarify().Evaluate(data).
+		Items(items...).
+		Calculations(calculations...)
 	if config.includeItems {
 		req = req.Include("items")
 	}

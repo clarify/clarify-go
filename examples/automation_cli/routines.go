@@ -181,8 +181,8 @@ func transformLabelValuesToTitle(item *views.ItemSave) {
 
 var detectFire = automation.EvaluateActions{
 	Evaluation: automation.Evaluation{
-		Items: []fields.ItemAggregation{
-			{Alias: "fire_rate", ID: os.Getenv("CLARIFY_EXAMPLE_STATUS_ITEM_ID"), Aggregation: fields.AggregateStateHistRate, State: 1},
+		Items: []fields.EvaluateItem{
+			{Alias: "fire_rate", ID: os.Getenv("CLARIFY_EXAMPLE_STATUS_ITEM_ID"), TimeAggregation: fields.TimeAggregationRate, State: 1},
 		},
 		Calculations: []fields.Calculation{
 			{Alias: "has_fire", Formula: "fire_rate > 0"}, // return 1.0 when true.

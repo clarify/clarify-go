@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,25 +21,36 @@ import (
 )
 
 const (
-	AggregateDefault AggregateMethod = iota
-	AggregateCount
-	AggregateMin
-	AggregateMax
-	AggregateSum
-	AggregateAvg
-	AggregateStateHistSeconds
-	AggregateStateHistPercent
-	AggregateStateHistRate
+	TimeAggregationDefault TimeAggregationMethod = iota
+	TimeAggregationCount
+	TimeAggregationMin
+	TimeAggregationMax
+	TimeAggregationSum
+	TimeAggregationAvg
+	TimeAggregationSeconds
+	TimeAggregationPercent
+	TimeAggregationRate
 )
 
-type AggregateMethod uint8
+type TimeAggregationMethod uint8
+
+const (
+	GroupAggregationDefault GroupAggregation = iota
+	GroupAggregationCount
+	GroupAggregationMin
+	GroupAggregationMax
+	GroupAggregationSum
+	GroupAggregationAvg
+)
+
+type GroupAggregation uint8
 
 var (
-	_ encoding.TextMarshaler   = AggregateMethod(0)
-	_ encoding.TextUnmarshaler = (*AggregateMethod)(nil)
+	_ encoding.TextMarshaler   = TimeAggregationMethod(0)
+	_ encoding.TextUnmarshaler = (*TimeAggregationMethod)(nil)
 )
 
-func (m AggregateMethod) String() string {
+func (m TimeAggregationMethod) String() string {
 	b, err := m.MarshalText()
 	if err != nil {
 		return "%(INVALID)!"
@@ -47,84 +58,150 @@ func (m AggregateMethod) String() string {
 	return string(b)
 }
 
-func (m AggregateMethod) MarshalText() ([]byte, error) {
+func (m TimeAggregationMethod) MarshalText() ([]byte, error) {
 	switch m {
-	case AggregateDefault:
+	case TimeAggregationDefault:
 		return nil, nil
-	case AggregateCount:
+	case TimeAggregationCount:
 		return []byte("count"), nil
-	case AggregateMin:
+	case TimeAggregationMin:
 		return []byte("min"), nil
-	case AggregateMax:
+	case TimeAggregationMax:
 		return []byte("max"), nil
-	case AggregateSum:
+	case TimeAggregationSum:
 		return []byte("sum"), nil
-	case AggregateAvg:
+	case TimeAggregationAvg:
 		return []byte("avg"), nil
-	case AggregateStateHistSeconds:
-		return []byte("state-histogram-seconds"), nil
-	case AggregateStateHistPercent:
-		return []byte("state-histogram-percent"), nil
-	case AggregateStateHistRate:
-		return []byte("state-histogram-rate"), nil
+	case TimeAggregationSeconds:
+		return []byte("state-seconds"), nil
+	case TimeAggregationPercent:
+		return []byte("state-percent"), nil
+	case TimeAggregationRate:
+		return []byte("state-rate"), nil
 	}
-	return nil, fmt.Errorf("unknown aggregation method")
+	return nil, fmt.Errorf("bad aggregation method")
 }
 
-func (m *AggregateMethod) UnmarshalText(data []byte) error {
+func (m *TimeAggregationMethod) UnmarshalText(data []byte) error {
 	switch string(data) {
 	case "":
-		*m = AggregateDefault
+		*m = TimeAggregationDefault
 	case "count":
-		*m = AggregateCount
+		*m = TimeAggregationCount
 	case "min":
-		*m = AggregateMin
+		*m = TimeAggregationMin
 	case "max":
-		*m = AggregateMax
+		*m = TimeAggregationMax
 	case "sum":
-		*m = AggregateSum
+		*m = TimeAggregationSum
 	case "avg":
-		*m = AggregateAvg
-	case "state-histogram-seconds":
-		*m = AggregateStateHistSeconds
-	case "state-histogram-percent":
-		*m = AggregateStateHistPercent
-	case "state-histogram-rate":
-		*m = AggregateStateHistRate
+		*m = TimeAggregationAvg
+	case "state-seconds", "state-histogram-seconds":
+		*m = TimeAggregationSeconds
+	case "state-percent", "state-histogram-percent":
+		*m = TimeAggregationPercent
+	case "state-rate", "state-histogram-rate":
+		*m = TimeAggregationRate
 	default:
 		return fmt.Errorf("bad aggregation method")
 	}
 	return nil
 }
 
-type ItemAggregation struct {
-	Alias       string          `json:"alias,omitempty"`
-	ID          string          `json:"id,omitempty"`
-	Aggregation AggregateMethod `json:"aggregation,omitempty"`
-	State       int             `json:"state"`
-	Lead        int             `json:"lead,omitempty"`
-	Lag         int             `json:"lag,omitempty"`
+func (m GroupAggregation) MarshalText() ([]byte, error) {
+	switch m {
+	case GroupAggregationDefault:
+		return nil, nil
+	case GroupAggregationCount:
+		return []byte("count"), nil
+	case GroupAggregationMin:
+		return []byte("min"), nil
+	case GroupAggregationMax:
+		return []byte("max"), nil
+	case GroupAggregationSum:
+		return []byte("sum"), nil
+	case GroupAggregationAvg:
+		return []byte("avg"), nil
+	}
+	return nil, fmt.Errorf("bad aggregation method")
 }
 
-var _ json.Marshaler = ItemAggregation{}
+func (m *GroupAggregation) UnmarshalText(data []byte) error {
+	switch string(data) {
+	case "":
+		*m = GroupAggregationDefault
+	case "count":
+		*m = GroupAggregationCount
+	case "min":
+		*m = GroupAggregationMin
+	case "max":
+		*m = GroupAggregationMax
+	case "sum":
+		*m = GroupAggregationSum
+	case "avg":
+		*m = GroupAggregationAvg
+	default:
+		return fmt.Errorf("bad aggregation method")
+	}
+	return nil
+}
 
-func (ia ItemAggregation) MarshalJSON() ([]byte, error) {
+type EvaluateItem struct {
+	Alias           string                `json:"alias,omitempty"`
+	ID              string                `json:"id,omitempty"`
+	TimeAggregation TimeAggregationMethod `json:"timeAggregation,omitempty"`
+	State           int                   `json:"state"`
+	Lead            int                   `json:"lead,omitempty"`
+	Lag             int                   `json:"lag,omitempty"`
+}
+
+type EvaluateGroup struct {
+	Alias            string                `json:"alias,omitempty"`
+	ID               string                `json:"id,omitempty"`
+	TimeAggregation  TimeAggregationMethod `json:"timeAggregation,omitempty"`
+	GroupAggregation GroupAggregation      `json:"groupAggregation,omitempty"`
+	State            int                   `json:"state"`
+	Lead             int                   `json:"lead,omitempty"`
+	Lag              int                   `json:"lag,omitempty"`
+}
+
+var _ json.Marshaler = EvaluateItem{}
+
+func (ia EvaluateItem) MarshalJSON() ([]byte, error) {
 	var v any
-	switch ia.Aggregation {
-	case AggregateStateHistSeconds, AggregateStateHistPercent, AggregateStateHistRate:
-		type encType ItemAggregation
+	switch ia.TimeAggregation {
+	case TimeAggregationSeconds, TimeAggregationPercent, TimeAggregationRate:
+		type encType EvaluateItem
 		v = encType(ia)
 	default:
 		type encType struct {
-			Alias       string          `json:"alias,omitempty"`
-			ID          string          `json:"id,omitempty"`
-			Aggregation AggregateMethod `json:"aggregation,omitempty"`
-			State       int             `json:"-"`
-			Lead        int             `json:"lead,omitempty"`
-			Lag         int             `json:"lag,omitempty"`
+			Alias           string                `json:"alias,omitempty"`
+			ID              string                `json:"id,omitempty"`
+			TimeAggregation TimeAggregationMethod `json:"aggregation,omitempty"`
+			State           int                   `json:"-"`
+			Lead            int                   `json:"lead,omitempty"`
+			Lag             int                   `json:"lag,omitempty"`
 		}
 		v = encType(ia)
 	}
+	return json.Marshal(v)
+}
+
+func (ga EvaluateGroup) MarshalJSON() ([]byte, error) {
+	var v any
+
+	type encType struct {
+		Alias            string                `json:"alias,omitempty"`
+		ID               string                `json:"id,omitempty"`
+		TimeAggregation  TimeAggregationMethod `json:"aggregation,omitempty"`
+		GroupAggregation GroupAggregation      `json:"groupAggregation,omitempty"`
+		State            int                   `json:"-"`
+		Lead             int                   `json:"lead,omitempty"`
+		Lag              int                   `json:"lag,omitempty"`
+	}
+
+	v = encType(ga)
+
 	return json.Marshal(v)
 }
 
