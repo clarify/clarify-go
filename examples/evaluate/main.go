@@ -25,8 +25,8 @@ func main() {
 	t2 := time.Now().Add(24 * time.Hour)
 
 	query := fields.Query().
-		Where(fields.CompareField("annotations.clarify/clarify-go/example/name", fields.Equal("publish_signals"))).
-		Limit(1)
+		Where(fields.FilterAll()).
+		Limit(10)
 
 	data := fields.Data().
 		Where(fields.TimeRange(t1, t2)).
@@ -44,13 +44,17 @@ func main() {
 		{Alias: "i1", ID: selection.Data[0].ID, TimeAggregation: fields.TimeAggregationAvg},
 	}
 	calculations := []fields.Calculation{
-		{Alias: "c1", Formula: "sin(a)"},
+		{Alias: "c1", Formula: "sin(g1)"},
 		{Alias: "c2", Formula: "sin(2*PI*time_seconds/3600)"},
 		{Alias: "c3", Formula: "max(c1,c2)"},
+	}
+	groups := []fields.EvaluateGroup{
+		{Alias: "g1", Query: query, TimeAggregation: fields.TimeAggregationAvg, GroupAggregation: fields.GroupAggregationAvg},
 	}
 
 	result, err := client.Clarify().Evaluate(data).
 		Items(items...).
+		Groups(groups...).
 		Calculations(calculations...).
 		Do(ctx)
 	if err != nil {

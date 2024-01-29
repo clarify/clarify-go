@@ -267,7 +267,7 @@ func (ns ClarifyNamespace) Evaluate(data fields.DataQuery) EvaluateRequest {
 }
 
 func (er EvaluateRequest) Items(items ...fields.EvaluateItem) EvaluateRequest {
-	newItems := make([]fields.EvaluateItem, len(er.items)+len(items))
+	newItems := make([]fields.EvaluateItem, 0, len(er.items)+len(items))
 	newItems = append(append(newItems, er.items...), items...)
 	er.items = newItems
 
@@ -275,7 +275,7 @@ func (er EvaluateRequest) Items(items ...fields.EvaluateItem) EvaluateRequest {
 }
 
 func (er EvaluateRequest) Groups(groups ...fields.EvaluateGroup) EvaluateRequest {
-	newGroups := make([]fields.EvaluateGroup, len(er.groups)+len(groups))
+	newGroups := make([]fields.EvaluateGroup, 0, len(er.groups)+len(groups))
 	newGroups = append(append(newGroups, er.groups...), groups...)
 	er.groups = newGroups
 
@@ -283,7 +283,7 @@ func (er EvaluateRequest) Groups(groups ...fields.EvaluateGroup) EvaluateRequest
 }
 
 func (er EvaluateRequest) Calculations(calculations ...fields.Calculation) EvaluateRequest {
-	newCalculations := make([]fields.Calculation, len(er.calculations)+len(calculations))
+	newCalculations := make([]fields.Calculation, 0, len(er.calculations)+len(calculations))
 	newCalculations = append(append(newCalculations, er.calculations...), calculations...)
 	er.calculations = newCalculations
 
@@ -291,7 +291,7 @@ func (er EvaluateRequest) Calculations(calculations ...fields.Calculation) Evalu
 }
 
 func (er EvaluateRequest) Include(relationships ...string) EvaluateRequest {
-	newRelationships := make([]string, len(er.relationships)+len(relationships))
+	newRelationships := make([]string, 0, len(er.relationships)+len(relationships))
 	newRelationships = append(append(newRelationships, er.relationships...), relationships...)
 	er.relationships = newRelationships
 
