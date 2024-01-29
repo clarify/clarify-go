@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	TimeAggregationDefault TimeAggregationMethod = iota
+	TimeAggregationDefault TimeAggregation = iota
 	TimeAggregationCount
 	TimeAggregationMin
 	TimeAggregationMax
@@ -32,7 +32,7 @@ const (
 	TimeAggregationRate
 )
 
-type TimeAggregationMethod uint8
+type TimeAggregation uint8
 
 const (
 	GroupAggregationDefault GroupAggregation = iota
@@ -46,11 +46,11 @@ const (
 type GroupAggregation uint8
 
 var (
-	_ encoding.TextMarshaler   = TimeAggregationMethod(0)
-	_ encoding.TextUnmarshaler = (*TimeAggregationMethod)(nil)
+	_ encoding.TextMarshaler   = TimeAggregation(0)
+	_ encoding.TextUnmarshaler = (*TimeAggregation)(nil)
 )
 
-func (m TimeAggregationMethod) String() string {
+func (m TimeAggregation) String() string {
 	b, err := m.MarshalText()
 	if err != nil {
 		return "%(INVALID)!"
@@ -58,7 +58,7 @@ func (m TimeAggregationMethod) String() string {
 	return string(b)
 }
 
-func (m TimeAggregationMethod) MarshalText() ([]byte, error) {
+func (m TimeAggregation) MarshalText() ([]byte, error) {
 	switch m {
 	case TimeAggregationDefault:
 		return nil, nil
@@ -82,7 +82,7 @@ func (m TimeAggregationMethod) MarshalText() ([]byte, error) {
 	return nil, fmt.Errorf("bad aggregation method")
 }
 
-func (m *TimeAggregationMethod) UnmarshalText(data []byte) error {
+func (m *TimeAggregation) UnmarshalText(data []byte) error {
 	switch string(data) {
 	case "":
 		*m = TimeAggregationDefault
@@ -147,60 +147,63 @@ func (m *GroupAggregation) UnmarshalText(data []byte) error {
 }
 
 type EvaluateItem struct {
-	Alias           string                `json:"alias,omitempty"`
-	ID              string                `json:"id,omitempty"`
-	TimeAggregation TimeAggregationMethod `json:"timeAggregation,omitempty"`
-	State           int                   `json:"state"`
-	Lead            int                   `json:"lead,omitempty"`
-	Lag             int                   `json:"lag,omitempty"`
+	Alias           string          `json:"alias,omitempty"`
+	ID              string          `json:"id,omitempty"`
+	TimeAggregation TimeAggregation `json:"timeAggregation,omitempty"`
+	State           int             `json:"state"`
+	Lead            int             `json:"lead,omitempty"`
+	Lag             int             `json:"lag,omitempty"`
 }
 
 type EvaluateGroup struct {
-	Alias            string                `json:"alias,omitempty"`
-	ID               string                `json:"id,omitempty"`
-	TimeAggregation  TimeAggregationMethod `json:"timeAggregation,omitempty"`
-	GroupAggregation GroupAggregation      `json:"groupAggregation,omitempty"`
-	State            int                   `json:"state"`
-	Lead             int                   `json:"lead,omitempty"`
-	Lag              int                   `json:"lag,omitempty"`
+	Alias            string           `json:"alias,omitempty"`
+	Query            ResourceQuery    `json:"query,omitempty"`
+	TimeAggregation  TimeAggregation  `json:"timeAggregation,omitempty"`
+	GroupAggregation GroupAggregation `json:"groupAggregation,omitempty"`
+	State            int              `json:"state"`
+	Lead             int              `json:"lead,omitempty"`
+	Lag              int              `json:"lag,omitempty"`
 }
 
 var _ json.Marshaler = EvaluateItem{}
 
-func (ia EvaluateItem) MarshalJSON() ([]byte, error) {
+func (ei EvaluateItem) MarshalJSON() ([]byte, error) {
 	var v any
-	switch ia.TimeAggregation {
+	switch ei.TimeAggregation {
 	case TimeAggregationSeconds, TimeAggregationPercent, TimeAggregationRate:
 		type encType EvaluateItem
-		v = encType(ia)
+
+		v = encType(ei)
 	default:
 		type encType struct {
-			Alias           string                `json:"alias,omitempty"`
-			ID              string                `json:"id,omitempty"`
-			TimeAggregation TimeAggregationMethod `json:"aggregation,omitempty"`
-			State           int                   `json:"-"`
-			Lead            int                   `json:"lead,omitempty"`
-			Lag             int                   `json:"lag,omitempty"`
+			Alias           string          `json:"alias,omitempty"`
+			ID              string          `json:"id,omitempty"`
+			TimeAggregation TimeAggregation `json:"timeAggregation,omitempty"`
+			State           int             `json:"-"`
+			Lead            int             `json:"lead,omitempty"`
+			Lag             int             `json:"lag,omitempty"`
 		}
-		v = encType(ia)
+
+		v = encType(ei)
 	}
+
 	return json.Marshal(v)
 }
 
-func (ga EvaluateGroup) MarshalJSON() ([]byte, error) {
+func (eg EvaluateGroup) MarshalJSON() ([]byte, error) {
 	var v any
 
 	type encType struct {
-		Alias            string                `json:"alias,omitempty"`
-		ID               string                `json:"id,omitempty"`
-		TimeAggregation  TimeAggregationMethod `json:"aggregation,omitempty"`
-		GroupAggregation GroupAggregation      `json:"groupAggregation,omitempty"`
-		State            int                   `json:"-"`
-		Lead             int                   `json:"lead,omitempty"`
-		Lag              int                   `json:"lag,omitempty"`
+		Alias            string           `json:"alias,omitempty"`
+		Query            ResourceQuery    `json:"query,omitempty"`
+		TimeAggregation  TimeAggregation  `json:"timeAggregation,omitempty"`
+		GroupAggregation GroupAggregation `json:"groupAggregation,omitempty"`
+		State            int              `json:"-"`
+		Lead             int              `json:"lead,omitempty"`
+		Lag              int              `json:"lag,omitempty"`
 	}
 
-	v = encType(ga)
+	v = encType(eg)
 
 	return json.Marshal(v)
 }
