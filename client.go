@@ -298,14 +298,20 @@ func (er EvaluateRequest) Include(relationships ...string) EvaluateRequest {
 	return er
 }
 
+func (er EvaluateRequest) Format(format views.SelectionFormat) EvaluateRequest {
+	er.format = format
+
+	return er
+}
+
 func (er EvaluateRequest) Do(ctx context.Context) (*EvaluateResult, error) {
 	r := methodEvaluate.NewRequest(er.h,
 		paramData.Value(er.data),
 		paramItems.Value(er.items),
 		paramGroups.Value(er.groups),
-		paramCalculations.Value(er.calculations))
-
-	r.Include(er.relationships...)
+		paramCalculations.Value(er.calculations),
+		paramFormat.Value(er.format)).
+		Include(er.relationships...)
 
 	return r.Do(ctx)
 }
@@ -318,6 +324,7 @@ type EvaluateRequest struct {
 	groups        []fields.EvaluateGroup
 	calculations  []fields.Calculation
 	relationships []string
+	format        views.SelectionFormat
 	h             jsonrpc.Handler
 }
 

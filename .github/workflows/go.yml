@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   test:
     name: Test
@@ -45,3 +46,33 @@ jobs:
 
       - name: Test example/devdata_cli (sub module)
         run: cd ./examples/devdata_cli && go test -race ./...
+
+  integration_test:
+    name: Integration test
+    strategy:
+      matrix:
+        # boolean values are cast to indices
+        environments: ${{ fromJSON('[["staging"], ["staging", "production"]]')[github.ref == 'refs/heads/main'] }}
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.environments }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for go-header check.
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            examples/devdata_cli/go.sum
+        id: go
+
+      - name: Test (main module)
+        run: go test -race ./test/...
+        env:
+          CLARIFY_USERNAME: ${{ secrets.CLARIFY_USERNAME }}
+          CLARIFY_PASSWORD: ${{ secrets.CLARIFY_PASSWORD }}
+          CLARIFY_ENDPOINT: ${{ secrets.CLARIFY_ENDPOINT }}
