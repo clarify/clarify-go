@@ -42,7 +42,7 @@ By using our [automation](automation) and [automationcli](automation/automationc
 
 ## Copyright
 
-Copyright 2022-2023 Searis AS
+Copyright 2022-2024 Searis AS
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use the content in this repo except in compliance with the License.

@@ -193,17 +193,24 @@ func (ei EvaluateItem) MarshalJSON() ([]byte, error) {
 func (eg EvaluateGroup) MarshalJSON() ([]byte, error) {
 	var v any
 
-	type encType struct {
-		Alias            string           `json:"alias,omitempty"`
-		Query            ResourceQuery    `json:"query,omitempty"`
-		TimeAggregation  TimeAggregation  `json:"timeAggregation,omitempty"`
-		GroupAggregation GroupAggregation `json:"groupAggregation,omitempty"`
-		State            int              `json:"-"`
-		Lead             int              `json:"lead,omitempty"`
-		Lag              int              `json:"lag,omitempty"`
-	}
+	switch eg.TimeAggregation {
+	case TimeAggregationSeconds, TimeAggregationPercent, TimeAggregationRate:
+		type encType EvaluateGroup
 
-	v = encType(eg)
+		v = encType(eg)
+	default:
+		type encType struct {
+			Alias            string           `json:"alias,omitempty"`
+			Query            ResourceQuery    `json:"query,omitempty"`
+			TimeAggregation  TimeAggregation  `json:"timeAggregation,omitempty"`
+			GroupAggregation GroupAggregation `json:"groupAggregation,omitempty"`
+			State            int              `json:"-"`
+			Lead             int              `json:"lead,omitempty"`
+			Lag              int              `json:"lag,omitempty"`
+		}
+
+		v = encType(eg)
+	}
 
 	return json.Marshal(v)
 }

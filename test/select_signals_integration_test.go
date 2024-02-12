@@ -1,0 +1,73 @@
+// Copyright 2024 Searis AS
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package test
+
+import (
+	"context"
+	"testing"
+
+	clarify "github.com/clarify/clarify-go"
+	"github.com/clarify/clarify-go/fields"
+)
+
+func TestSelectSignal(t *testing.T) {
+	ctx := context.Background()
+	creds := getCredentials(t)
+	client := creds.Client(ctx)
+	prefix := createPrefix()
+	a := TestArgs{
+		ctx:         ctx,
+		integration: creds.Integration,
+		client:      client,
+		prefix:      prefix,
+	}
+
+	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault))
+
+	type testCase struct {
+		testArgs       TestArgs
+		signals        fields.ResourceQuery
+		expectedFields func(*clarify.SelectSignalsResult) bool
+	}
+
+	test := func(tc testCase) func(t *testing.T) {
+		return func(t *testing.T) {
+			t.Helper()
+
+			result, err := selectSignals(tc.testArgs.ctx, tc.testArgs.client, tc.testArgs.integration, tc.signals)
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			} else if !tc.expectedFields(result) {
+				t.Errorf("unexpected field found!")
+			}
+
+			jsonEncode(t, result)
+		}
+	}
+
+	t.Run("basic select signals test", test(testCase{
+		testArgs: a,
+		signals:  createAnnotationQuery(a.prefix),
+		expectedFields: func(ssr *clarify.SelectSignalsResult) bool {
+			return true
+		},
+	}))
+}
+
+func selectSignals(ctx context.Context, client *clarify.Client, integration string, signals fields.ResourceQuery) (*clarify.SelectSignalsResult, error) {
+	result, err := client.Admin().SelectSignals(integration, signals).Do(ctx)
+
+	return result, err
+}
