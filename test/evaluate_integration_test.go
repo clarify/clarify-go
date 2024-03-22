@@ -106,13 +106,13 @@ func TestEvaluate(t *testing.T) {
 		fields.TimeAggregationPercent,
 		fields.TimeAggregationRate,
 	}
-	for _, taggs := range taggs {
-		t.Run("time aggregation test type "+fmt.Sprint(taggs), test(testCase{
+	for _, tagg := range taggs {
+		t.Run("time aggregation test type "+fmt.Sprint(tagg), test(testCase{
 			testArgs:         a,
 			itemIDs:          itemIDs,
 			query:            createAnnotationQuery(a.prefix),
 			data:             fields.Data().Where(fields.TimeRange(t0, t1)).RollupDuration(time.Hour, time.Monday),
-			timeAggregation:  taggs,
+			timeAggregation:  tagg,
 			groupAggregation: fields.GroupAggregationAvg,
 			expectedFields:   ef,
 		}))
