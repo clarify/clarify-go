@@ -1,6 +1,6 @@
 # Clarify Go SDK
 
-[![GitHub Actions](https://github.com/clarify/clarify-go/workflows/Go/badge.svg?branch=master)](https://github.com/clarify/clarify-go/actions?query=workflow%3AGo+branch%main)
+[![GitHub Actions](https://github.com/clarify/clarify-go/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/clarify/clarify-go/actions/workflows/go.yml?query=workflow%3AGo+branch%3Amain)
 [![Go Reference](https://pkg.go.dev/badge/github.com/clarify/clarify-go.svg)](https://pkg.go.dev/github.com/clarify/clarify-go)
 [![Clarify Docs](https://img.shields.io/badge/%7CC%7C-docs-blue)][docs]
 
