@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@ package automation
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
+	"maps"
 	"slices"
 	"strings"
 )
@@ -34,6 +36,17 @@ import (
 // these restrictions will result in undefined behavior for the SubRoutines
 // method.
 type Routines map[string]Routine
+
+func (routines Routines) Print(w io.Writer, indent string) {
+	for _, k := range slices.Sorted(maps.Keys(routines)) {
+		if sub, ok := routines[k].(Routines); ok {
+			fmt.Fprintf(w, "%s%s/\n", indent, k)
+			sub.Print(w, indent+"  ")
+		} else {
+			fmt.Fprintf(w, "%s%s\n", indent, k)
+		}
+	}
+}
 
 // SubRoutines returns a sub-set composed of routines that matches the passed in
 // patterns. When routines are nested, the slash character (/) can be used to
