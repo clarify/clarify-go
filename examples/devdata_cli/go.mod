@@ -1,6 +1,8 @@
 module github.com/clarify/clarify-go/devdata_cli
 
-go 1.21
+go 1.23
+
+toolchain go1.23.2
 
 require (
 	github.com/clarify/clarify-go v0.3.0

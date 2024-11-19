@@ -1,6 +1,6 @@
 module github.com/clarify/clarify-go
 
-go 1.21
+go 1.23
 
 require golang.org/x/oauth2 v0.13.0
 
