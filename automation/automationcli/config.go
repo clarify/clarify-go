@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -171,6 +172,9 @@ func (cfg *Config) Run(ctx context.Context) error {
 	client, err := cfg.Client(ctx)
 	if err != nil {
 		return err
+	}
+	if cfg.Verbose {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 	var routines automation.Routines
 	if len(cfg.Patterns) == 0 {
