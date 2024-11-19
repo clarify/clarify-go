@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package automationcli
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -25,19 +26,22 @@ import (
 	"github.com/clarify/clarify-go/automation"
 )
 
-// ParseAndRun parses command-line options and runs content from routines. On
+// ParseAndRun parses command-line arguments and runs content from routines. On
 // completion, the function return an exit status that should be passed on to
 // os.Exit.
 func ParseAndRun(routines automation.Routines) int {
-	cfg, err := ParseArguments(os.Args[1:])
-	if err != nil {
+	cfg, err := ParseArguments(routines, os.Args[1:])
+	switch {
+	case errors.Is(err, flag.ErrHelp):
+		return 0
+	case err != nil:
 		fmt.Fprintf(os.Stderr, "%s: %s", os.Args[0], err.Error())
 		return 2
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer stop()
 
-	err = cfg.Run(ctx, routines)
+	err = cfg.Run(ctx)
 	switch {
 	case errors.Is(err, context.Canceled):
 		fmt.Fprintf(os.Stderr, "%s: interrupt", os.Args[0])

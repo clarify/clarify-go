@@ -1,4 +1,4 @@
-// Copyright 2023 Searis AS
+// Copyright 2023-2024 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,24 +19,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime/debug"
+	"path/filepath"
 
 	"github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/automation"
 )
 
-var (
-	defaultAppName  string
-	defaultProgName string
-)
+var defaultProgName string
 
 func init() {
-	// Set default app name.
-	if info, ok := debug.ReadBuildInfo(); ok {
-		defaultAppName = info.Main.Path
-	}
 	if len(os.Args) > 0 {
-		defaultProgName = os.Args[0]
+		defaultProgName = filepath.Base(os.Args[0])
 	}
 }
 
@@ -47,12 +40,18 @@ const (
 	usageVerbose     = "Set to true for printing logs at level DEBUG (the default is to log at INFO level)."
 	usageDryRun      = "Signal to routines that they should mot write or persist changes."
 	usageEarlyOut    = "Signal to routines that they should abort at the first error."
-	usageArgs        = `
-PATTERNS are expected to match routine or sub-routine names. Use slash (/) to
-match specific sub-paths or asterisk (*) to match all sub-routines as a given
-path level.
-`
 )
+
+const usageFmt = `Usage: %[1]s [OPTIONS] [PATTERNS...]
+
+PATTERNS are expected to match routine or sub-routine names. Sub-routines are
+matched via the slash character (/). The asterisk (*) can be used for wildcard
+matching of a single path level.
+
+Example: Given routines "a/b/b", "a/b/c" and "b/b/c", then:
+- "a/b" will match "a/b/b" and "a/b/c"
+- "*/b/c" will match "a/b/c" and "b/b/c"
+`
 
 // Config describe a set of command-line options.
 type Config struct {
@@ -72,6 +71,9 @@ type Config struct {
 	// Password can be set to use Basic Authentication to authorize against
 	// Clarify. This property is required if Username is set.
 	Password Password
+
+	// Available routines for patterns to match.
+	Routines automation.Routines
 
 	// Patterns describes which sub-routines to run. If empty, all sub-routines
 	// are run.
@@ -95,9 +97,10 @@ type Config struct {
 //
 // This function can be used by users who need to customize the configuration
 // before it's run, but do not need to customize command-line flags.
-func ParseArguments(arguments []string) (*Config, error) {
-	var cfg Config
-	cfg.AppName = defaultAppName
+func ParseArguments(routines automation.Routines, arguments []string) (*Config, error) {
+	cfg := Config{
+		Routines: routines,
+	}
 	set := cfg.FlagSet(defaultProgName, flag.ContinueOnError)
 	err := set.Parse(arguments)
 	if err != nil {
@@ -113,19 +116,21 @@ func ParseArguments(arguments []string) (*Config, error) {
 //
 // This method can be used by users who need to customize the which command-line
 // flags are available in their application.
-func (cfg *Config) FlagSet(name string, errorHandling flag.ErrorHandling) *flag.FlagSet {
-	if name == "" {
-		name = defaultProgName
+func (cfg *Config) FlagSet(progName string, errorHandling flag.ErrorHandling) *flag.FlagSet {
+	if progName == "" {
+		progName = defaultProgName
 	}
 	adder := flagSetAdder{
 		envPrefix: "CLARIFY_",
-		set:       flag.NewFlagSet(name, errorHandling),
+		set:       flag.NewFlagSet(progName, errorHandling),
 	}
 	adder.set.Usage = func() {
 		out := adder.set.Output()
-		fmt.Fprintf(out, "Usage: %s [OPTIONS] [PATTERNS, ...]\n", name)
-		fmt.Fprint(out, usageArgs+"\n")
-		flag.PrintDefaults()
+		fmt.Fprintf(out, usageFmt, progName)
+		fmt.Fprintln(out, "\nAvailable routines:")
+		cfg.Routines.Print(out, "  ")
+		fmt.Fprintln(out, "\nOptions:")
+		adder.set.PrintDefaults()
 	}
 
 	adder.StringVar(&cfg.CredentialsFile, "credentials", "credentials.json", usageCredentials)
@@ -162,20 +167,23 @@ func (p Config) Client(ctx context.Context) (*clarify.Client, error) {
 
 // Run runs configuration from routines using configuration from cfg in
 // an arbitrary order.
-func (cfg *Config) Run(ctx context.Context, routines automation.Routines) error {
+func (cfg *Config) Run(ctx context.Context) error {
 	client, err := cfg.Client(ctx)
 	if err != nil {
 		return err
 	}
-	if len(cfg.Patterns) > 0 {
-		routines = routines.SubRoutines(cfg.Patterns...)
+	var routines automation.Routines
+	if len(cfg.Patterns) == 0 {
+		routines = cfg.Routines
+	} else {
+		routines = cfg.Routines.SubRoutines(cfg.Patterns...)
 	}
-	routineCfg := automation.NewConfig(client).
+	runCfg := automation.NewConfig(client).
 		WithDryRun(cfg.DryRun).
 		WithEarlyOut(cfg.EarlyOut)
 
 	if cfg.AppName != "" {
-		routineCfg = routineCfg.WithAppName(cfg.AppName)
+		runCfg = runCfg.WithAppName(cfg.AppName)
 	}
-	return routines.Do(ctx, routineCfg)
+	return routines.Do(ctx, runCfg)
 }
