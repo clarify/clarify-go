@@ -14,4 +14,4 @@ linters-settings:
         COMPANY: Searis AS
       regexp:
         ANY_AUTHOR: "(.*)"
-    template-path: .go-header.tmpl
+    template-path: .go-header.txt
