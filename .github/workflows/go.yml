@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for go-header check.
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: |
@@ -27,21 +27,17 @@ jobs:
         id: go
 
       - name: Verify go modules up to date
-        run: |
-          set -ex
-          go mod tidy
-          [ -z "$(git diff -- go.{mod,sum})" ] # Check there are no changes!
+        run: go mod tidy -diff
 
       - name: Test (main module)
         run: go test -race ./...
 
       - name: Lint (main module)
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.62
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          only-new-issues: false
-          skip-cache: true
+          only-new-issues: true # Required for go-header check
           args: --timeout=10m
 
       - name: Test example/devdata_cli (sub module)
@@ -57,12 +53,10 @@ jobs:
     environment: ${{ matrix.environments }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Required for go-header check.
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: |
