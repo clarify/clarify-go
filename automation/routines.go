@@ -171,8 +171,6 @@ func (routines Routines) Do(ctx context.Context, cfg *Config) error {
 			}
 			cfg.Logger().LogAttrs(ctx, slog.LevelError, "Failed", AttrError(err))
 			errCnt++
-		} else {
-			logger.LogAttrs(ctx, slog.LevelDebug, "OK")
 		}
 	}
 	if errCnt > 0 {

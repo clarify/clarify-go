@@ -15,15 +15,20 @@
 package automationcli
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/clarify/clarify-go"
 	"github.com/clarify/clarify-go/automation"
+	"github.com/clarify/clarify-go/internal/logging"
+	"github.com/clarify/clarify-go/jsonrpc"
 )
 
 var defaultProgName string
@@ -39,6 +44,7 @@ const (
 	usageUsername    = "Clarify integration ID to use as username; alternative to providing -credentials."
 	usagePassword    = "Clarify integration password; required when username is set, ignored otherwise."
 	usageVerbose     = "Set to true for printing logs at level DEBUG (the default is to log at INFO level)."
+	usageJSON        = "Set to true to output logs in compact JSON format."
 	usageDryRun      = "Signal to routines that they should mot write or persist changes."
 	usageEarlyOut    = "Signal to routines that they should abort at the first error."
 )
@@ -82,6 +88,9 @@ type Config struct {
 
 	// Verbose, if set, turns on DEBUG logging. The default log level is INFO.
 	Verbose bool
+
+	// Use a JSON log format.
+	JSON bool
 
 	// DryRun, if set, signals routines and actions to not persist changes.
 	DryRun bool
@@ -138,56 +147,83 @@ func (cfg *Config) FlagSet(progName string, errorHandling flag.ErrorHandling) *f
 	adder.StringVar(&cfg.Username, "username", "", usageUsername)
 	adder.StringVar(&cfg.Password.value, "password", "", usagePassword)
 	adder.BoolVar(&cfg.Verbose, "v", false, usageVerbose)
+	adder.BoolVar(&cfg.JSON, "json", false, usageJSON)
 	adder.BoolVar(&cfg.DryRun, "dry-run", false, usageDryRun)
 	adder.BoolVar(&cfg.EarlyOut, "early-out", false, usageEarlyOut)
 	return adder.set
 }
 
-// Client returns an http.Client according to the configuration or an error in
-// case of invalid configuration. Note that invalid or expired credentials is
-// not considered a configuration error, and will still result in a client being
-// returned.
-func (p Config) Client(ctx context.Context) (*clarify.Client, error) {
-	var err error
-	var creds *clarify.Credentials
-	switch {
-	case p.Username != "" && p.Password.value == "":
-		return nil, fmt.Errorf("-password: required when -username is specified")
-	case p.CredentialsFile == "":
-		return nil, fmt.Errorf("-credentials: required when -username is not specified")
-	case p.Username != "":
-		creds = clarify.BasicAuthCredentials(p.Username, p.Password.value)
-	default:
-		creds, err = clarify.CredentialsFromFile(p.CredentialsFile)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return creds.Client(ctx), nil
-}
-
 // Run runs configuration from routines using configuration from cfg in
 // an arbitrary order.
 func (cfg *Config) Run(ctx context.Context) error {
-	client, err := cfg.Client(ctx)
+	opts := &slog.HandlerOptions{}
+	if cfg.Verbose {
+		opts.Level = slog.LevelDebug
+	} else {
+		opts.Level = slog.LevelInfo
+	}
+
+	var h slog.Handler
+	if cfg.JSON {
+		h = slog.NewJSONHandler(os.Stderr, opts)
+	} else {
+		var shutdown func()
+		h, shutdown = logging.NewPrettyHandler(os.Stderr, opts)
+		defer shutdown()
+	}
+	logger := slog.New(h)
+
+	client, err := cfg.client(ctx, logger)
 	if err != nil {
 		return err
 	}
-	if cfg.Verbose {
-		slog.SetLogLoggerLevel(slog.LevelDebug)
+
+	runCfg := automation.NewConfig(client).
+		WithLogger(logger).
+		WithDryRun(cfg.DryRun).
+		WithEarlyOut(cfg.EarlyOut)
+	if cfg.AppName != "" {
+		runCfg = runCfg.WithAppName(cfg.AppName).WithLogger(logger)
 	}
+
 	var routines automation.Routines
 	if len(cfg.Patterns) == 0 {
 		routines = cfg.Routines
 	} else {
 		routines = cfg.Routines.SubRoutines(cfg.Patterns...)
 	}
-	runCfg := automation.NewConfig(client).
-		WithDryRun(cfg.DryRun).
-		WithEarlyOut(cfg.EarlyOut)
-
-	if cfg.AppName != "" {
-		runCfg = runCfg.WithAppName(cfg.AppName)
-	}
 	return routines.Do(ctx, runCfg)
+}
+
+func (cfg *Config) client(ctx context.Context, logger *slog.Logger) (*clarify.Client, error) {
+	var creds *clarify.Credentials
+	switch {
+	case cfg.Username != "" && cfg.Password.value == "":
+		return nil, fmt.Errorf("-password: required when -username is specified")
+	case cfg.CredentialsFile == "":
+		return nil, fmt.Errorf("-credentials: required when -username is not specified")
+	case cfg.Username != "":
+		creds = clarify.BasicAuthCredentials(cfg.Username, cfg.Password.value)
+	default:
+		var err error
+		creds, err = clarify.CredentialsFromFile(cfg.CredentialsFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	h, err := creds.HTTPHandler(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if cfg.Verbose && logger != nil {
+		h.RequestLogger = func(request jsonrpc.Request, trace string, latency time.Duration, err error) {
+			var b bytes.Buffer
+			enc := json.NewEncoder(&b)
+			_ = enc.Encode(request)
+			logger.Debug("Performing JSON RPC request", "trace", trace, "latency", latency, "err", err, "body", json.RawMessage(b.Bytes()))
+		}
+	}
+
+	return clarify.NewClient(creds.Integration, h), nil
 }
