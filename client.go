@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Searis AS
+// Copyright 2022-2025 Searis AS
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	apiVersion = "1.1"
+	apiVersion             = "1.1"
+	apiVersionExperimental = "1.2alpha1"
 
 	paramCalculations   jsonrpc.ParamName = "calculations"
 	paramData           jsonrpc.ParamName = "data"
@@ -149,6 +150,10 @@ type AdminNamespace struct {
 	h jsonrpc.Handler
 }
 
+func (ns AdminNamespace) Handler() jsonrpc.Handler {
+	return ns.h
+}
+
 // SelectSignals returns a new request for querying signals and related
 // resources.
 func (ns AdminNamespace) SelectSignals(integration string, q fields.ResourceQuery) SelectSignalsRequest {
@@ -204,6 +209,10 @@ var methodPublishSignals = request.Method[PublishSignalsResult]{
 
 type ClarifyNamespace struct {
 	h jsonrpc.Handler
+}
+
+func (ns ClarifyNamespace) Handler() jsonrpc.Handler {
+	return ns.h
 }
 
 // SelectItems returns a request for querying items.
@@ -332,6 +341,6 @@ type EvaluateRequest struct {
 type EvaluateResult = views.Selection[views.DataFrame, views.DataFrameInclude]
 
 var methodEvaluate = request.RelationalMethod[EvaluateResult]{
-	APIVersion: "1.2alpha1",
+	APIVersion: apiVersionExperimental,
 	Method:     "clarify.evaluate",
 }
