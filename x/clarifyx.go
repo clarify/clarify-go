@@ -29,6 +29,7 @@ const (
 
 	paramFormat      jsonrpc.ParamName = "format"
 	paramIntegration jsonrpc.ParamName = "integration"
+	paramData        jsonrpc.ParamName = "data"
 	paramItem        jsonrpc.ParamName = "item"
 	paramQuery       jsonrpc.ParamName = "query"
 )
