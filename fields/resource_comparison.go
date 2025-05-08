@@ -236,8 +236,8 @@ func Regex(pattern string) Comparison {
 	}
 }
 
-func (cmp Comparison) String() string {
-	b, _ := json.Marshal(cmp)
+func (c Comparison) String() string {
+	b, _ := json.Marshal(c)
 	return string(b)
 }
 

@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	clarify "github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/fields"
 )
 

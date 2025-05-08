@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/fields"
 	clarifyx "github.com/clarify/clarify-go/x"
 )
@@ -36,5 +37,7 @@ func main() {
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	enc.Encode(result)
+	if err := enc.Encode(result); err != nil {
+		panic(err)
+	}
 }

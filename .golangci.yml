@@ -1,17 +1,58 @@
+version: "2"
+run:
+  modules-download-mode: readonly
+  tests: true
 linters:
   enable:
-    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers.
-    - gci # Control golang package import order and make it always deterministic.
-    - godot # Check if comments end in a period.
-    - misspell # Finds commonly misspelled English words in comments.
-    - goheader # Checks is file header matches pattern.
+    - asciicheck
+    - bidichk
+    - dupword
+    #- errname
+    - goconst
+    - godot
+    - misspell
+    - nakedret
+    - nilerr
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - -SA1019
+        - -ST1000
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  new: false
+formatters:
+  enable:
+    - gci
+    - gofmt
     - gofumpt
-
-linters-settings:
-  goheader:
-    values:
-      const:
-        COMPANY: Searis AS
-      regexp:
-        ANY_AUTHOR: "(.*)"
-    template-path: .go-header.txt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/clarify/clarify-go/)
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

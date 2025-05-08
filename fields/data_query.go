@@ -44,12 +44,12 @@ func Data() DataQuery {
 	return DataQuery{}
 }
 
-func (q DataQuery) MarshalJSON() ([]byte, error) {
-	return json.Marshal(q.query)
+func (dq DataQuery) MarshalJSON() ([]byte, error) {
+	return json.Marshal(dq.query)
 }
 
-func (q *DataQuery) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &q.query)
+func (dq *DataQuery) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &dq.query)
 }
 
 // Origin returns a new data query with a custom rollup bucket origin. The

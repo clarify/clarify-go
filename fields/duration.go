@@ -176,8 +176,8 @@ func (cd *CalendarDuration) UnmarshalText(b []byte) error {
 	return nil
 }
 
-func (dd CalendarDuration) MarshalText() ([]byte, error) {
-	s, err := formatCalendarDuration(dd)
+func (cd CalendarDuration) MarshalText() ([]byte, error) {
+	s, err := formatCalendarDuration(cd)
 	if err != nil {
 		return nil, err
 	}

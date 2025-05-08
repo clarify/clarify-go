@@ -24,8 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/clarify/clarify-go/jsonrpc"
 	"golang.org/x/oauth2/clientcredentials"
+
+	"github.com/clarify/clarify-go/jsonrpc"
 )
 
 // Credentials contain a data-structure with Clarify integration credentials.

@@ -97,7 +97,7 @@ func TestRoutinesSubRoutines(t *testing.T) {
 			`level=INFO msg=OK routine=routine2`,
 		},
 	}))
-	t.Run("wildcard wildcard", test(testCase{
+	t.Run("wildcard", test(testCase{
 		patterns: []string{"*/*"},
 		expectLines: []string{
 			`level=INFO msg=OK routine=folder1/folder1/routine1`,
@@ -135,7 +135,7 @@ func TestRoutinesSubRoutines(t *testing.T) {
 			`level=INFO msg=OK routine=folder1/folder2/routine1`,
 		},
 	}))
-	t.Run("wildcard wildcard routine2", test(testCase{
+	t.Run("wildcard routine2", test(testCase{
 		patterns: []string{"*/*/routine2"},
 		expectLines: []string{
 			`level=INFO msg=OK routine=folder1/folder1/routine2`,

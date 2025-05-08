@@ -56,4 +56,4 @@ export CLARIFY_EXAMPLE_STATUS_ITEM_ID=...
 go run . evaluate/detect-fire
 ```
 
-You should now have about 45 % chance to see the text "FIRE! FIRE! FIRE!".
+You should now have about 45 % chance to see the text "FIRE!".

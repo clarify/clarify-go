@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/testdata"
 )

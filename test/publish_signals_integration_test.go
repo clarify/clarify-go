@@ -20,11 +20,12 @@ import (
 	"testing"
 
 	clarify "github.com/clarify/clarify-go"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/clarify/clarify-go/automation"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestPublishSignals(t *testing.T) {

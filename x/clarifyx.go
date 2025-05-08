@@ -16,6 +16,7 @@ package clarifyx
 
 import (
 	"github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/internal/request"
 	"github.com/clarify/clarify-go/jsonrpc"

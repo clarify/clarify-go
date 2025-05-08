@@ -7,6 +7,7 @@ import (
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
 )
@@ -72,5 +73,7 @@ func main() {
 	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	enc.Encode(result)
+	if err := enc.Encode(result); err != nil {
+		panic(err)
+	}
 }
