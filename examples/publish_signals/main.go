@@ -6,21 +6,15 @@ import (
 	"strings"
 
 	clarify "github.com/clarify/clarify-go"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/clarify/clarify-go/automation"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
-	// For more advanced applications, defining your annotations as constants,
-	// is less error prone. Annotation keys should be prefixed to avoid
-	// collision.
-	keyTransformVersion     = "clarify/clarify-go/example/transform"
-	keySignalAttributesHash = "clarify/clarify-go/example/source-signal/attributes-hash"
-	keySignalID             = "clarify/clarify-go/example/source-signal/id"
-
 	// In this example we filter which signals to expose using the following
 	// annotation keys and values.
 	keyExampleName    = "clarify/clarify-go/example/name"

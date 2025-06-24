@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/jsonrpc"
 )
 

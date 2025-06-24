@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/clarify/clarify-go"
+
 	"github.com/clarify/clarify-go/automation"
 	"github.com/clarify/clarify-go/internal/logging"
 	"github.com/clarify/clarify-go/jsonrpc"

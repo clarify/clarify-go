@@ -32,13 +32,14 @@ jobs:
       - name: Test (main module)
         run: go test -race ./...
 
-      - name: Lint (main module)
-        uses: golangci/golangci-lint-action@v6
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: v1.62
+          version: "v2.0"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          only-new-issues: true # Required for go-header check
-          args: --timeout=10m
+          skip-cache: true
+          only-new-issues: false
+          args: --timeout=15m
 
       - name: Test example/devdata_cli (sub module)
         run: cd ./examples/devdata_cli && go test -race ./...

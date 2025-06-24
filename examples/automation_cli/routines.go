@@ -23,22 +23,16 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/clarify/clarify-go/automation"
 	"github.com/clarify/clarify-go/fields"
 	"github.com/clarify/clarify-go/views"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
 	exampleName = "automation_cli"
-
-	// For more advanced applications, defining your annotations as constants,
-	// is less error prone. Annotation keys should be prefixed to avoid
-	// collision.
-	keyTransformVersion     = "clarify/clarify-go/example/transform"
-	keySignalAttributesHash = "clarify/clarify-go/example/source-signal/attributes-hash"
-	keySignalID             = "clarify/clarify-go/example/source-signal/id"
 
 	// In this example we filter which signals to expose using the following
 	// annotation keys and values.
@@ -191,6 +185,6 @@ var detectFire = automation.EvaluateActions{
 	},
 	Actions: []automation.ActionFunc{
 		automation.ActionSeriesContains("has_fire", 1),
-		automation.ActionRoutine(automation.LogInfo("FIRE! FIRE! FIRE!")),
+		automation.ActionRoutine(automation.LogInfo("FIRE!")),
 	},
 }
