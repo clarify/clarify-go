@@ -87,66 +87,66 @@ func TestRoutinesSubRoutines(t *testing.T) {
 	t.Run("wildcard", test(testCase{
 		patterns: []string{"*"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine1`,
-			`level=INFO msg=OK routine=folder1/folder1/routine2`,
-			`level=INFO msg=OK routine=folder1/folder2/routine1`,
-			`level=INFO msg=OK routine=folder1/folder2/routine2`,
-			`level=INFO msg=OK routine=folder2/folder1/routine1`,
-			`level=INFO msg=OK routine=folder2/folder1/routine2`,
-			`level=INFO msg=OK routine=routine1`,
-			`level=INFO msg=OK routine=routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=routine2`,
 		},
 	}))
 	t.Run("wildcard", test(testCase{
 		patterns: []string{"*/*"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine1`,
-			`level=INFO msg=OK routine=folder1/folder1/routine2`,
-			`level=INFO msg=OK routine=folder1/folder2/routine1`,
-			`level=INFO msg=OK routine=folder1/folder2/routine2`,
-			`level=INFO msg=OK routine=folder2/folder1/routine1`,
-			`level=INFO msg=OK routine=folder2/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine2`,
 		},
 	}))
 	t.Run("folder1,folder2", test(testCase{
 		patterns: []string{"folder1", "folder2"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine1`,
-			`level=INFO msg=OK routine=folder1/folder1/routine2`,
-			`level=INFO msg=OK routine=folder1/folder2/routine1`,
-			`level=INFO msg=OK routine=folder1/folder2/routine2`,
-			`level=INFO msg=OK routine=folder2/folder1/routine1`,
-			`level=INFO msg=OK routine=folder2/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine2`,
 		},
 	}))
 	t.Run("folder1", test(testCase{
 		patterns: []string{"folder1"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine1`,
-			`level=INFO msg=OK routine=folder1/folder1/routine2`,
-			`level=INFO msg=OK routine=folder1/folder2/routine1`,
-			`level=INFO msg=OK routine=folder1/folder2/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine2`,
 		},
 	}))
 	t.Run("folder1 wildcard routine1", test(testCase{
 		patterns: []string{"folder1/*/routine1"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine1`,
-			`level=INFO msg=OK routine=folder1/folder2/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine1`,
 		},
 	}))
 	t.Run("wildcard routine2", test(testCase{
 		patterns: []string{"*/*/routine2"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=folder1/folder1/routine2`,
-			`level=INFO msg=OK routine=folder1/folder2/routine2`,
-			`level=INFO msg=OK routine=folder2/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder1/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder1/folder2/routine2`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=folder2/folder1/routine2`,
 		},
 	}))
 	t.Run("routine1", test(testCase{
 		patterns: []string{"routine1"},
 		expectLines: []string{
-			`level=INFO msg=OK routine=routine1`,
+			`level=INFO msg=OK app=github.com/clarify/clarify-go routine=routine1`,
 		},
 	}))
 }
