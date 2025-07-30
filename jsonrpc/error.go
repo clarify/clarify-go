@@ -96,6 +96,7 @@ type ErrorData struct {
 	Params           map[string][]string `json:"params,omitempty"`
 	InvalidResources []InvalidResource   `json:"invalidResources,omitempty"`
 	PartialResult    json.RawMessage     `json:"partialResult,omitempty"`
+	PathErrors       json.RawMessage     `json:"pathErrors,omitempty"`
 }
 
 // InvalidResource describes an invalid resource.
