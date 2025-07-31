@@ -17,6 +17,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -114,9 +115,9 @@ func onlyError[R any](f func(TestArgs) (R, error)) func(TestArgs) error {
 }
 
 func applyTestArgs(a TestArgs, fs ...func(a TestArgs) error) {
-	for _, f := range fs {
+	for i, f := range fs {
 		if err := f(a); err != nil {
-			panic(err)
+			panic(fmt.Errorf("applyTestArgs fs[%d]: %w", i, err))
 		}
 	}
 }
