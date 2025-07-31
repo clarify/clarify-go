@@ -70,4 +70,4 @@ jobs:
         env:
           CLARIFY_USERNAME: ${{ secrets.CLARIFY_USERNAME }}
           CLARIFY_PASSWORD: ${{ secrets.CLARIFY_PASSWORD }}
-          CLARIFY_ENDPOINT: ${{ secrets.CLARIFY_ENDPOINT }}
+          CLARIFY_ENDPOINT: ${{ vars.CLARIFY_ENDPOINT }}
