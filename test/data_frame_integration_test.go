@@ -15,20 +15,34 @@
 package test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"log/slog"
 	"testing"
 	"time"
 
 	clarify "github.com/clarify/clarify-go"
 
 	"github.com/clarify/clarify-go/fields"
+	"github.com/clarify/clarify-go/jsonrpc"
 )
 
 func TestDataFrame(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
-	client := creds.Client(ctx)
-	prefix := createPrefix()
+	creds := credentialsFromEnv(t)
+	h, err := creds.HTTPHandler(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.RequestLogger = func(request jsonrpc.Request, trace string, latency time.Duration, err error) {
+		var b bytes.Buffer
+		enc := json.NewEncoder(&b)
+		_ = enc.Encode(request)
+		slog.Debug("Performing JSON RPC request", "trace", trace, "latency", latency, "err", err, "body", json.RawMessage(b.Bytes()))
+	}
+	client := clarify.NewClient(creds.Integration, h)
+	prefix := prefixFromTestName()
 	a := TestArgs{
 		ctx:         ctx,
 		integration: creds.Integration,
@@ -36,9 +50,9 @@ func TestDataFrame(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
 
-	t0, t1 := getDefaultTimeRange()
+	t0, t1 := timeRange()
 
 	type testCase struct {
 		testArgs       TestArgs
@@ -58,13 +72,13 @@ func TestDataFrame(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 
 	t.Run("basic data frame test", test(testCase{
 		testArgs: a,
-		items:    createAnnotationQuery(a.prefix),
+		items:    annotationQuery(a.prefix),
 		data:     fields.Data().Where(fields.TimeRange(t0, t1)).RollupDuration(time.Hour, time.Monday),
 		expectedFields: func(dfr *clarify.DataFrameResult) bool {
 			return true
@@ -73,7 +87,7 @@ func TestDataFrame(t *testing.T) {
 
 	t.Run("less basic data frame test", test(testCase{
 		testArgs: a,
-		items:    createAnnotationQuery(a.prefix),
+		items:    annotationQuery(a.prefix),
 		data:     fields.Data().Where(fields.TimeRange(t1, t0)).RollupDuration(time.Hour, time.Monday),
 		expectedFields: func(dfr *clarify.DataFrameResult) bool {
 			return true
@@ -85,15 +99,4 @@ func dataFrame(ctx context.Context, client *clarify.Client, items fields.Resourc
 	result, err := client.Clarify().DataFrame(items, data).Do(ctx)
 
 	return result, err
-}
-
-//lint:ignore U1000 Ignore unused function temporarily for debugging
-func dataFrameDefault(a TestArgs) (*clarify.DataFrameResult, error) {
-	items := createAnnotationQuery(a.prefix)
-	t0, t1 := getDefaultTimeRange()
-	data := fields.Data().
-		Where(fields.TimeRange(t0, t1)).
-		RollupDuration(time.Hour, time.Monday)
-
-	return dataFrame(a.ctx, a.client, items, data)
 }

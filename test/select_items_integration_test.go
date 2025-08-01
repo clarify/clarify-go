@@ -25,9 +25,9 @@ import (
 
 func TestSelectItems(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 
 	a := TestArgs{
 		ctx:         ctx,
@@ -36,7 +36,7 @@ func TestSelectItems(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
 
 	type testCase struct {
 		testArgs       TestArgs
@@ -55,13 +55,13 @@ func TestSelectItems(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 
 	t.Run("basic select items test", test(testCase{
 		testArgs: a,
-		items:    createAnnotationQuery(a.prefix),
+		items:    annotationQuery(a.prefix),
 		expectedFields: func(sir *clarify.SelectItemsResult) bool {
 			return true
 		},
@@ -75,7 +75,7 @@ func selectItems(ctx context.Context, client *clarify.Client, items fields.Resou
 }
 
 func selectItemsDefault(a TestArgs) (*clarify.SelectItemsResult, error) {
-	items := createAnnotationQuery(a.prefix)
+	items := annotationQuery(a.prefix)
 
 	return selectItems(a.ctx, a.client, items)
 }

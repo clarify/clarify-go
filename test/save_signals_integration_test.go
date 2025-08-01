@@ -28,9 +28,9 @@ import (
 
 func TestSaveSignals(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 
 	a := TestArgs{
 		ctx:         ctx,
@@ -39,7 +39,7 @@ func TestSaveSignals(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault))
 
 	type testCase struct {
 		testArgs       TestArgs
@@ -57,7 +57,7 @@ func TestSaveSignals(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 

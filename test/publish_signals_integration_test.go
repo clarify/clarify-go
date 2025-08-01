@@ -30,9 +30,9 @@ import (
 
 func TestPublishSignals(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 
 	a := TestArgs{
 		ctx:         ctx,
@@ -41,7 +41,7 @@ func TestPublishSignals(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault))
 
 	type testCase struct {
 		testArgs       TestArgs

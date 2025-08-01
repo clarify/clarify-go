@@ -28,9 +28,9 @@ import (
 
 func TestInsert(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 	a := TestArgs{
 		ctx:         ctx,
 		integration: creds.Integration,
@@ -54,7 +54,7 @@ func TestInsert(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 
@@ -67,7 +67,7 @@ func TestInsert(t *testing.T) {
 }
 
 func insert(ctx context.Context, client *clarify.Client, prefix string) (*clarify.InsertResult, error) {
-	tt0, tt1 := getDefaultTimeRange()
+	tt0, tt1 := timeRange()
 	t0 := fields.AsTimestamp(tt0)
 	segmentSize := 15 * time.Minute
 	segments := int(tt1.Sub(tt0)) / int(segmentSize)

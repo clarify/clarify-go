@@ -25,9 +25,9 @@ import (
 
 func TestSelectSignal(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 	a := TestArgs{
 		ctx:         ctx,
 		integration: creds.Integration,
@@ -35,7 +35,7 @@ func TestSelectSignal(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault))
 
 	type testCase struct {
 		testArgs       TestArgs
@@ -54,13 +54,13 @@ func TestSelectSignal(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 
 	t.Run("basic select signals test", test(testCase{
 		testArgs: a,
-		signals:  createAnnotationQuery(a.prefix),
+		signals:  annotationQuery(a.prefix),
 		expectedFields: func(ssr *clarify.SelectSignalsResult) bool {
 			return true
 		},
