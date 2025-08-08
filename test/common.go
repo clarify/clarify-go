@@ -17,6 +17,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -33,13 +34,15 @@ const (
 	AnnotationValue = "in-the-banana-stand"
 )
 
-func getDefaultTimeRange() (time.Time, time.Time) {
-	tidenesMorgen := time.Unix(0, 0).UTC().Truncate(time.Hour)
-	tidenesKveld := tidenesMorgen.Add(10 * time.Hour)
+// timeRange returns a default time range used for test queries.
+func timeRange() (time.Time, time.Time) {
+	start := time.Unix(0, 0).UTC().Truncate(time.Hour)
+	end := start.Add(10 * time.Hour)
 
-	return tidenesMorgen, tidenesKveld
+	return start, end
 }
 
+// TestName returns the name of the calling test function.
 func testName() string {
 	pc := make([]uintptr, 10)
 	n := runtime.Callers(3, pc)
@@ -50,13 +53,17 @@ func testName() string {
 	return funk
 }
 
-func createPrefix() string {
+// prefixFromTestName creates a prefix based on the test name.
+func prefixFromTestName() string {
 	test := testName()
 
 	return test + "/"
 }
 
-func getCredentials(t *testing.T) *clarify.Credentials {
+// credentialsFromEnv reads Clarify credentials from environment variables.
+func credentialsFromEnv(t *testing.T) *clarify.Credentials {
+	t.Helper()
+
 	var creds *clarify.Credentials
 
 	username := os.Getenv("CLARIFY_USERNAME")
@@ -88,23 +95,25 @@ func getCredentials(t *testing.T) *clarify.Credentials {
 	return creds
 }
 
-func jsonEncode[v any](t *testing.T, a v) {
+// mustPrintJSON pretty-prints a value to stdout for test diagnostics.
+func mustPrintJSON[v any](t *testing.T, a v) {
+	t.Helper()
 	enc := json.NewEncoder(os.Stdout)
-
 	enc.SetIndent("", "  ")
-
-	err := enc.Encode(a)
-	if err != nil {
-		t.Errorf("%v", err)
+	if err := enc.Encode(a); err != nil {
+		t.Errorf("json encoding failed: %v", err)
 	}
 }
 
-func createAnnotationQuery(prefix string) fields.ResourceQuery {
+// annotationQuery builds a filter for test resources based on a known annotation.
+func annotationQuery(prefix string) fields.ResourceQuery {
 	return fields.Query().
 		Where(fields.Comparisons{"annotations." + prefix + AnnotationKey: fields.Equal(AnnotationValue)}).
 		Limit(10)
 }
 
+// onlyError wraps a function that returns a result and error,
+// and discards the result.
 func onlyError[R any](f func(TestArgs) (R, error)) func(TestArgs) error {
 	return func(a TestArgs) error {
 		_, err := f(a)
@@ -113,14 +122,16 @@ func onlyError[R any](f func(TestArgs) (R, error)) func(TestArgs) error {
 	}
 }
 
-func applyTestArgs(a TestArgs, fs ...func(a TestArgs) error) {
-	for _, f := range fs {
+// mustApplyTestArgs applies a series of test functions, panicking on error.
+func mustApplyTestArgs(a TestArgs, fs ...func(a TestArgs) error) {
+	for i, f := range fs {
 		if err := f(a); err != nil {
-			panic(err)
+			panic(fmt.Errorf("applyTestArgs fs[%d]: %w", i, err))
 		}
 	}
 }
 
+// TestArgs bundles common arguments for test operations.
 type TestArgs struct {
 	ctx         context.Context
 	integration string
@@ -128,6 +139,7 @@ type TestArgs struct {
 	prefix      string
 }
 
+// Map transforms a slice using the provided function.
 func Map[A any, B any](f func(a A) B, as []A) []B {
 	g := func(index int, a A) B {
 		return f(a)
@@ -136,6 +148,7 @@ func Map[A any, B any](f func(a A) B, as []A) []B {
 	return MapIndex(g, as)
 }
 
+// MapIndex transforms a slice using the provided index-aware function.
 func MapIndex[A any, B any](f func(i int, a A) B, as []A) []B {
 	bs := make([]B, len(as))
 

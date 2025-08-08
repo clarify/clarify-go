@@ -28,9 +28,9 @@ import (
 
 func TestEvaluate(t *testing.T) {
 	ctx := context.Background()
-	creds := getCredentials(t)
+	creds := credentialsFromEnv(t)
 	client := creds.Client(ctx)
-	prefix := createPrefix()
+	prefix := prefixFromTestName()
 	a := TestArgs{
 		ctx:         ctx,
 		integration: creds.Integration,
@@ -38,9 +38,9 @@ func TestEvaluate(t *testing.T) {
 		prefix:      prefix,
 	}
 
-	applyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
+	mustApplyTestArgs(a, onlyError(insertDefault), onlyError(saveSignalsDefault), onlyError(publishSignalsDefault))
 
-	t0, t1 := getDefaultTimeRange()
+	t0, t1 := timeRange()
 	ir, err := selectItemsDefault(a)
 	if err != nil {
 		t.Errorf("%v", err)
@@ -69,7 +69,7 @@ func TestEvaluate(t *testing.T) {
 				t.Errorf("unexpected field found!")
 			}
 
-			jsonEncode(t, result)
+			mustPrintJSON(t, result)
 		}
 	}
 
@@ -90,7 +90,7 @@ func TestEvaluate(t *testing.T) {
 	t.Run("basic evaluate test", test(testCase{
 		testArgs:         a,
 		itemIDs:          itemIDs,
-		query:            createAnnotationQuery(a.prefix),
+		query:            annotationQuery(a.prefix),
 		data:             fields.Data().Where(fields.TimeRange(t0, t1)).RollupDuration(time.Hour, time.Monday),
 		timeAggregation:  fields.TimeAggregationAvg,
 		groupAggregation: fields.GroupAggregationAvg,
@@ -111,7 +111,7 @@ func TestEvaluate(t *testing.T) {
 		t.Run("time aggregation test type "+fmt.Sprint(tagg), test(testCase{
 			testArgs:         a,
 			itemIDs:          itemIDs,
-			query:            createAnnotationQuery(a.prefix),
+			query:            annotationQuery(a.prefix),
 			data:             fields.Data().Where(fields.TimeRange(t0, t1)).RollupDuration(time.Hour, time.Monday),
 			timeAggregation:  tagg,
 			groupAggregation: fields.GroupAggregationAvg,
@@ -130,7 +130,7 @@ func TestEvaluate(t *testing.T) {
 		t.Run("group aggregation test type "+fmt.Sprint(gagg), test(testCase{
 			testArgs:         a,
 			itemIDs:          itemIDs,
-			query:            createAnnotationQuery(a.prefix),
+			query:            annotationQuery(a.prefix),
 			data:             fields.Data().Where(fields.TimeRange(t0, t1)).RollupDuration(time.Hour, time.Monday),
 			timeAggregation:  fields.TimeAggregationAvg,
 			groupAggregation: gagg,
