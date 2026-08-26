@@ -134,8 +134,8 @@ func (l *Labels) Remove(key string, value string) {
 		delete((*l), key)
 		return
 	}
-	slices.Sort((*l)[key])
-	if i, found := slices.BinarySearch(ll, value); !found {
+	slices.Sort(ll)
+	if i, found := slices.BinarySearch(ll, value); found {
 		ll = slices.Delete(ll, i, i+1)
 	}
 	if len(ll) == 0 {
